@@ -48,7 +48,6 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;background:var(
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;
   font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;-webkit-text-size-adjust:100%}
-body.dragging-ui{user-select:none;-webkit-user-select:none;cursor:grabbing}
 button,input,select,textarea{font:inherit;color:inherit}
 svg{display:block;flex:none}
 mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
@@ -84,9 +83,10 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 
 /* views */
 main{flex:1;min-height:0;display:flex}
-#board,#folders,#results{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch}
-#plane{position:relative;min-width:max(100%,var(--pw,0px));min-height:max(100%,var(--ph,0px));
-  background-image:radial-gradient(var(--grid) 1px,transparent 1px);background-size:24px 24px}
+#board,#folders,#favs,#results{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch}
+/* Sections lay themselves out: as many columns as fit the screen (min 260px each), packed top-to-bottom.
+   Each section's height is measured in JS and turned into a row-span, so shorter columns fill first. */
+#plane{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));grid-auto-rows:8px;column-gap:16px;align-items:start;padding:16px 16px 48px;min-height:100%}
 .empty{position:absolute;left:50%;top:80px;transform:translateX(-50%);width:min(360px,calc(100vw - 40px));text-align:center;color:var(--muted);
   background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:22px}
 .empty h2{margin:0 0 6px;color:var(--ink);font-size:16px}
@@ -95,24 +95,19 @@ main{flex:1;min-height:0;display:flex}
 .flash{animation:flash 2s ease-out}
 
 /* sections */
-.section{position:absolute;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
-.section.lifting{z-index:60;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.s-head{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 4px;background:color-mix(in srgb,var(--sc) 13%,var(--panel));border-radius:8px 8px 0 0}
-.grip{cursor:grab;touch-action:none;color:var(--muted);display:grid;place-items:center;width:22px;min-height:26px;flex:none;border-radius:5px}
-.grip:hover{color:var(--ink)}
+.section{position:relative;min-width:0;margin-bottom:16px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.s-head{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:color-mix(in srgb,var(--sc) 13%,var(--panel));border-radius:8px 8px 0 0}
 .s-title{flex:1;min-width:0;text-align:left;border:0;background:none;cursor:pointer;font-weight:650;font-size:14px;padding:3px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .s-count{font-size:11px;color:var(--muted);padding:0 2px}
 .s-desc{padding:4px 10px 0;font-size:12px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .s-cards{display:flex;flex-direction:column;gap:6px;padding:8px;min-height:40px}
-.s-cards:empty::before{content:"No cards yet";color:var(--muted);font-size:12px;text-align:center;padding:8px;border:1px dashed var(--line);border-radius:8px}
+.s-cards:empty::before{content:attr(data-empty);color:var(--muted);font-size:12px;text-align:center;padding:8px;border:1px dashed var(--line);border-radius:8px}
 .quick{margin:0 8px 8px;padding:6px 9px;border:1px dashed var(--line);border-radius:8px;background:transparent;font-size:14px}
 .quick:focus{outline:none;border-style:solid;border-color:var(--accent);background:var(--card)}
 
 /* cards */
-.card{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:7px 8px 7px 3px;cursor:pointer;min-width:0}
+.card{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer;min-width:0}
 .card:hover{border-color:color-mix(in srgb,var(--sc) 55%,var(--line))}
-.card.dragging{opacity:.3}
-.card.ghost{position:fixed;z-index:3000;pointer-events:none;box-shadow:0 12px 30px rgba(0,0,0,.3);transform:rotate(1.5deg);opacity:.96;cursor:grabbing}
 .c-main{flex:1;min-width:0}
 .c-top{display:flex;align-items:flex-start;gap:8px}
 .c-title{font-weight:600;overflow-wrap:anywhere;flex:1;min-width:0}
@@ -120,8 +115,64 @@ main{flex:1;min-height:0;display:flex}
 .sdot{--st:#2fa66a;position:relative;width:8px;height:8px;border-radius:50%;border:0;padding:0;margin:6px 1px 0 0;flex:none;background:var(--st);cursor:pointer}
 .sdot::after{content:"";position:absolute;inset:-10px}
 .sdot[data-s="active"]{--st:#2fa66a}
-.sdot[data-s="developing"]{--st:#f0b429}
-.sdot[data-s="inactive"]{--st:#a3abb9}
+.sdot[data-s="dormant"]{--st:#f0b429}
+.sdot[data-s="closed"]{--st:#a3abb9}
+.tab.fav .tab-main svg{color:#d99a1e}
+.tagsel{-webkit-appearance:none;appearance:none;max-width:190px;padding:7px 30px 7px 12px;border:1px solid var(--line2);border-radius:10px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b6578' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;font:inherit;color:var(--ink);cursor:pointer;text-overflow:ellipsis}
+.tagsel:hover{border-color:var(--muted)}
+.tagsel.on{background-color:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
+.section.dim{opacity:.5}
+.etags{display:flex;flex-wrap:wrap;gap:6px}
+.etags:not(:empty){margin-bottom:8px}
+.etag{display:inline-flex;align-items:center;gap:2px;padding:3px 4px 3px 11px;border-radius:999px;background:var(--bg);border:1px solid var(--line2);font-size:13px;font-weight:550}
+.etag button{width:22px;height:22px;border-radius:50%;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:0}
+.etag button:hover{background:var(--line);color:var(--ink)}
+.newtag{display:flex;gap:8px;align-items:center;margin-top:8px}
+.newtag input{flex:1;min-width:0}
+.closed-toggle{display:flex;align-items:center;gap:6px;width:100%;border:0;background:none;color:var(--muted);font-size:12.5px;font-weight:650;padding:5px 4px;cursor:pointer;border-radius:8px;text-align:left}
+.closed-toggle:hover{background:rgba(255,255,255,.7);color:var(--ink)}
+.closed-toggle svg{transition:transform .14s;flex:none}
+.closed-toggle[aria-expanded="true"] svg{transform:rotate(90deg)}
+.closed-toggle .cn{background:rgba(255,255,255,.85);border-radius:999px;padding:0 7px;font-size:11px;font-variant-numeric:tabular-nums}
+.closed-box{display:flex;flex-direction:column;gap:6px}
+.favwrap .closed-toggle{width:auto;margin:16px 0 10px;font-size:13.5px}
+.favwrap .closed-toggle .cn{background:var(--line)}
+.card[data-st="closed"]{opacity:.62;transition:opacity .12s}
+.card[data-st="closed"]:hover{opacity:1}
+.c-fav{color:#d99a1e;display:inline-flex;margin-top:3px;flex:none}
+.favwrap{max-width:1000px;margin:0 auto;padding:16px 14px 90px}
+.favgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:18px;padding:2px 8px 10px 2px}
+.fav-tile{position:relative;aspect-ratio:1/1;border-radius:28px;min-width:0;overflow:hidden;
+  background:color-mix(in srgb,var(--tc) 16%,#fff);
+  box-shadow:0 12px 24px -14px color-mix(in srgb,var(--tc) 75%,#000),0 1px 3px rgba(16,24,40,.08);
+  transition:transform .15s ease,box-shadow .15s ease,opacity .12s}
+.fav-tile:hover{transform:translateY(-3px);box-shadow:0 18px 30px -14px color-mix(in srgb,var(--tc) 80%,#000),0 2px 4px rgba(16,24,40,.1)}
+.fav-tile:active{transform:translateY(1px);box-shadow:0 6px 14px -10px color-mix(in srgb,var(--tc) 75%,#000)}
+.fav-tile::after{content:attr(data-initial);position:absolute;right:4px;bottom:-34px;font-family:ui-rounded,"SF Pro Rounded","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;font-size:136px;font-weight:900;line-height:1;color:color-mix(in srgb,var(--tc) 30%,#fff);pointer-events:none;user-select:none}
+.fav-main{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:5px;text-align:left;width:100%;height:100%;border:0;background:none;padding:16px 16px 18px;color:var(--ink);text-decoration:none;cursor:pointer;min-width:0;font:inherit;border-radius:28px;z-index:1}
+.fav-main:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.fav-name{font-family:ui-rounded,"SF Pro Rounded","Nunito","Arial Rounded MT Bold",system-ui,sans-serif;font-size:24px;font-weight:800;line-height:1.08;letter-spacing:-.02em;color:var(--ink);overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.fav-sec{max-width:100%;font-size:12.5px;font-weight:750;color:rgba(24,34,56,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav-name.lg{font-size:21px}
+.fav-name.xl{font-size:17px}
+.fav-board{z-index:1;position:absolute;left:18px;right:58px;top:16px;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:rgba(24,34,56,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.fav-actions{position:absolute;z-index:2;right:10px;top:10px;display:flex}
+.fav-actions .icon-btn{width:34px;height:34px;border-radius:11px;background:rgba(255,255,255,.62);color:rgba(24,34,56,.72)}
+.fav-actions .icon-btn:hover{background:rgba(255,255,255,.92);color:var(--ink)}
+.fav-tile[data-st="closed"]{opacity:.62}
+.fav-tile[data-st="closed"]:hover{opacity:1}
+.fav-tile.match{box-shadow:0 0 0 5px var(--hl),0 12px 24px -14px color-mix(in srgb,var(--tc) 75%,#000)}
+.fav-tile.match.cur{box-shadow:0 0 0 5px var(--accent),0 12px 24px -14px color-mix(in srgb,var(--tc) 75%,#000)}
+.fav-big{width:60px;height:60px;border-radius:50%;background:#fdf3d8;color:#d99a1e;display:grid;place-items:center;margin:0 auto 12px}
+.sw-row{display:flex;align-items:center;gap:14px}
+.sw-txt{flex:1;min-width:0}
+.sw-t{display:flex;align-items:center;gap:6px;font-weight:600}
+.sw-t svg{color:#d99a1e}
+.sw-row .hint{margin:3px 0 0}
+.switch{position:relative;width:50px;height:30px;border-radius:999px;border:0;background:var(--line2);cursor:pointer;flex:none;transition:background .15s;padding:0}
+.switch .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .15s}
+.switch[aria-checked="true"]{background:var(--accent)}
+.switch[aria-checked="true"] .knob{transform:translateX(20px)}
 .sdot.static{margin:0;cursor:inherit;pointer-events:none;box-shadow:none;width:10px;height:10px}
 .sdot.static::after{display:none}
 .sdot:not(.static):hover{transform:scale(1.35)}
@@ -135,7 +186,6 @@ main{flex:1;min-height:0;display:flex}
 .c-meta a svg{flex:none}
 .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
 .tag{font-size:11px;padding:0 7px;border-radius:20px;background:color-mix(in srgb,var(--sc,var(--accent)) 16%,transparent)}
-.section.drop-target{outline:2px solid var(--accent);outline-offset:2px}
 #searchbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 12px;background:color-mix(in srgb,var(--accent) 9%,var(--panel));border-bottom:1px solid var(--line);font-size:13px}
 #searchbar .sp{flex:1}
 .match{outline:2px solid color-mix(in srgb,var(--accent) 60%,transparent);outline-offset:1px}
@@ -234,6 +284,7 @@ main{flex:1;min-height:0;display:flex}
 <main>
   <div id="board"><div id="plane"></div></div>
   <div id="folders" hidden></div>
+  <div id="favs" hidden></div>
   <div id="results" hidden></div>
 </main>
 <div id="toast" hidden></div>
@@ -269,15 +320,23 @@ const firebaseConfig = {
                    kind 'board'   = free-form board of sections + cards
                    kind 'folders' = folder tree
 
-   sections/<id>   { boardId, name, description, url, color, x, y, width, ... }
+   sections/<id>   { boardId, name, description, url, color, ... }  (x / y / width from older
+                   versions are ignored: sections now lay themselves out)
                    A place where information lives (app, drive, tool…).
                    Legacy sections without boardId belong to board 'main'.
 
    cards/<id>      { sectionId, title, body (the card's note), url, tags[],
-                     status: 'active'|'developing'|'inactive', ... }
+                     status: 'active'|'dormant'|'closed'  (older docs saved
+                     'developing' / 'inactive'; they are read as dormant / closed),
+                     fav: true|false  (true = also shown on the Favourites board), ... }
+
+   Favourites is NOT stored: it is a built-in first tab that lists every card
+   with fav:true from all boards (A–Z). One card, one source of truth.
                    One piece of information stored in a section.
                    Moving a card only changes sectionId.
-                   Everything is displayed sorted A–Z (boards, cards, folders,
+                   Cards are sorted by status (Active, Dormant, Closed), then A–Z.
+                   Closed cards are tucked under a collapsible “Closed” row.
+                   Everything else is displayed sorted A–Z (boards, folders,
                    folder contents, search results); no manual order is stored.
 
    folders/<id>    { boardId, parentId|null, name, note (short, shown inline), createdAt, updatedAt }
@@ -288,17 +347,17 @@ const firebaseConfig = {
    ===================================================================== */
 
 const COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
-const WIDTHS = {S:240, M:290, L:380};
 const KINDS = {board:'Free-form board', folders:'Folder structure'};
 const COLLS = ['boards','sections','cards','folders','contents'];
-const STATUS = {active:{label:'Active'}, developing:{label:'Developing'}, inactive:{label:'Inactive'}};
-const STATUS_ORDER = ['active','developing','inactive'];
-const cardStatus = c => (c && STATUS[c.status]) ? c.status : 'active';
+const STATUS = {active:{label:'Active'}, dormant:{label:'Dormant'}, closed:{label:'Closed'}};
+const STATUS_ORDER = ['active','dormant','closed'];
+const cardStatus = c => { const v = c && c.status; if(v==='developing') return 'dormant'; if(v==='inactive') return 'closed'; return STATUS[v] ? v : 'active'; };
+const FAV_BOARD = {id:'fav', kind:'favourites', name:'Fav'};
 
 const S = { boards:new Map(), sections:new Map(), cards:new Map(), folders:new Map(), contents:new Map(),
   got:{boards:false,sections:false,cards:false,folders:false,contents:false},
-  boardId:null, q:'', listView:false, matchIdx:-1, store:null, refocus:null, collapsed:new Set(), flash:null, mainCreating:false };
-try{ S.boardId = localStorage.getItem('im.board'); }catch(e){}
+  boardId:null, q:'', listView:false, matchIdx:-1, tag:null, closedOpen:new Set(), favClosedOpen:false, store:null, refocus:null, collapsed:new Set(), flash:null, mainCreating:false };
+S.boardId = 'fav';   // the app always opens on the Favourites board
 
 /* ---------- storage adapters (same interface) ---------- */
 const chains = new Map();
@@ -359,6 +418,7 @@ const boardOf = s => s.boardId || 'main';
 const cmp = (a,b)=>String(a||'').localeCompare(String(b||''),undefined,{sensitivity:'base',numeric:true});
 const byName = (x,y)=>cmp(x.name,y.name);
 const byTitle = (x,y)=>cmp(x.title,y.title);
+const byStatusTitle = (a,b)=>(STATUS_ORDER.indexOf(cardStatus(a))-STATUS_ORDER.indexOf(cardStatus(b))) || byTitle(a,b);
 
 async function run(promise){
   try{ return await promise; }
@@ -393,8 +453,7 @@ const Model = {
   /* sections */
   sectionsOf(bid){ return [...S.sections.values()].filter(s=>boardOf(s)===bid); },
   sectionsSorted(bid){ return Model.sectionsOf(bid).sort(byName); },
-  sectionsByPosition(bid){ return Model.sectionsOf(bid).sort((a,b)=>((a.y||0)-(b.y||0))||((a.x||0)-(b.x||0))); },
-  addSection(d){ const id=uid('s'); const t=now(); return run(S.store.set('sections',id,{name:'',description:'',url:'',color:'c0',x:24,y:24,width:WIDTHS.S,...d,createdAt:t,updatedAt:t})).then(()=>id); },
+  addSection(d){ const id=uid('s'); const t=now(); return run(S.store.set('sections',id,{name:'',description:'',url:'',color:'c0',...d,createdAt:t,updatedAt:t})).then(()=>id); },
   updateSection(id,p){ return run(S.store.update('sections',id,{...p,updatedAt:now()})); },
   async deleteSection(id, moveToId){
     const cards = Model.cardsIn(id);
@@ -407,15 +466,12 @@ const Model = {
   },
 
   /* cards */
-  cardsIn(sectionId){ return [...S.cards.values()].filter(c=>c.sectionId===sectionId).sort(byTitle); },
+  favCards(){ return [...S.cards.values()].filter(c=>c.fav===true && S.sections.has(c.sectionId)).sort(byStatusTitle); },
+  cardsIn(sectionId){ return [...S.cards.values()].filter(c=>c.sectionId===sectionId).sort(byStatusTitle); },
   addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'active',...d,createdAt:t,updatedAt:t})).then(()=>id); },
   updateCard(id,p){ return run(S.store.update('cards',id,{...p,updatedAt:now()})); },
   saveCardFull(card){ return run(S.store.set('cards',card.id,{...card,updatedAt:now()})); },
   deleteCard(id){ return run(S.store.remove('cards',id)); },
-  async moveCard(id, toSectionId){
-    const card = S.cards.get(id); if(!card || card.sectionId===toSectionId) return;
-    return Model.updateCard(id,{sectionId:toSectionId});
-  },
 
   /* folders */
   foldersOf(bid){ return [...S.folders.values()].filter(f=>f.boardId===bid); },
@@ -462,7 +518,7 @@ const Model = {
    UI helpers
    ===================================================================== */
 const $ = s => document.querySelector(s);
-const board = $('#board'), plane = $('#plane'), foldersEl = $('#folders'), resultsEl = $('#results');
+const board = $('#board'), plane = $('#plane'), foldersEl = $('#folders'), favsEl = $('#favs'), resultsEl = $('#results');
 let qInput = null;
 
 function h(tag, attrs, ...kids){
@@ -493,7 +549,10 @@ const ICONS = {
   doc:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/>',
   filePlus:'<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 12v6M9 15h6"/>',
   folderPlus:'<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10.5v5M9.5 13h5"/>',
-  note:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/>'
+  note:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/>',
+  star:'<path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
+  starFill:'<path fill="currentColor" d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
+  tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V4h9l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor"/>'
 };
 function ic(name,size=16){
   const s = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -539,13 +598,12 @@ function toast(msg, action){
 
 /* current board */
 function curBoard(){
-  const bs = Model.boardsSorted(); if(!bs.length) return null;
-  return S.boards.get(S.boardId) || bs[0];
+  if(S.boardId==='fav') return FAV_BOARD;
+  return S.boards.get(S.boardId) || FAV_BOARD;
 }
 function clearSearch(){ S.q=''; S.listView=false; S.matchIdx=-1; if(qInput) qInput.value=''; }
 function selectBoard(id){
-  S.boardId = id;
-  try{ localStorage.setItem('im.board', id); }catch(e){}
+  S.boardId = id; S.tag = null;
   render();
 }
 
@@ -614,12 +672,16 @@ function openBoardEditor(opts){
 
 /* ---------- card editor ---------- */
 function openCardEditor(opts){
-  const b = curBoard(); if(!b) return;
-  const secs = Model.sectionsSorted(b.id);
-  if(!secs.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
   const existing = opts.id ? S.cards.get(opts.id) : null;
+  const exSec = existing ? S.sections.get(existing.sectionId) : null;
+  const b0 = curBoard();
+  const bid = exSec ? boardOf(exSec) : (b0 && b0.kind==='board' ? b0.id : null);
+  if(!bid) return;
+  const secs = Model.sectionsSorted(bid);
+  if(!secs.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
   const d = existing ? {...existing} : {sectionId:opts.sectionId||secs[0].id, title:'', body:'', url:'', tags:[], status:'active'};
   let status = cardStatus(d);
+  let fav = d.fav === true;
   if(!secs.some(s=>s.id===d.sectionId)) d.sectionId = secs[0].id;
 
   openSheet(sheet=>{
@@ -630,7 +692,35 @@ function openCardEditor(opts){
     const stSeg = h('div',{class:'seg'});
     STATUS_ORDER.forEach(k=>{ stSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{ status=k; [...stSeg.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }}, h('span',{class:'sdot static','data-s':k}), STATUS[k].label)); });
     const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:'Optional link to open it'}); url.value = d.url||'';
-    const tags = h('input',{type:'text',maxlength:'300',placeholder:'comma, separated'}); tags.value = (d.tags||[]).join(', ');
+    const favSw = h('button',{type:'button',class:'switch',role:'switch','aria-checked':String(fav),'aria-label':'Favourite',onclick:()=>{ fav=!fav; favSw.setAttribute('aria-checked',String(fav)); }}, h('span',{class:'knob'}));
+    const favRow = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), favSw);
+    /* tags: chips + dropdown of existing tags + "New tag…" */
+    let tagsSel = [];
+    (d.tags||[]).forEach(t=>{ t = String(t).trim(); if(t && !tagsSel.some(x=>tagKey(x)===tagKey(t))) tagsSel.push(t); });
+    const knownTags = ()=>{ const m = new Map(); S.cards.forEach(c=>(c.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !m.has(k)) m.set(k,String(t).trim()); })); return [...m.values()].sort(cmp); };
+    const chips = h('div',{class:'etags'});
+    const picker = h('select',{'aria-label':'Add a tag'});
+    const newInput = h('input',{type:'text',maxlength:'40',placeholder:'New tag (comma for several)','aria-label':'New tag'});
+    const newRow = h('div',{class:'newtag'}, newInput, h('button',{type:'button',class:'btn sm',text:'Add',onclick:()=>{ addTag(newInput.value); newInput.value=''; newInput.focus(); }}));
+    function paintTags(){
+      chips.replaceChildren(...tagsSel.map(t=>h('span',{class:'etag'}, t, h('button',{type:'button','aria-label':'Remove tag '+t,onclick:()=>{ tagsSel = tagsSel.filter(x=>x!==t); paintTags(); }}, '×'))));
+      const free = knownTags().filter(t=>!tagsSel.some(x=>tagKey(x)===tagKey(t)));
+      picker.replaceChildren(h('option',{value:'',text:free.length?'Add an existing tag…':'No other tags yet'}), ...free.map(t=>h('option',{value:t,text:t})), h('option',{value:'__new',text:'＋ New tag…'}));
+      picker.value = '';
+    }
+    function addTag(raw){
+      String(raw||'').split(',').forEach(t=>{
+        t = t.trim().slice(0,40); if(!t || tagsSel.length>=20 || tagsSel.some(x=>tagKey(x)===tagKey(t))) return;
+        const known = knownTags().find(x=>tagKey(x)===tagKey(t));
+        tagsSel.push(known || t);
+      });
+      paintTags();
+    }
+    picker.addEventListener('change',()=>{ const v = picker.value; if(v==='__new'){ newRow.hidden = false; picker.value=''; newInput.focus(); } else if(v) addTag(v); });
+    newInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); addTag(newInput.value); newInput.value=''; } });
+    newRow.hidden = knownTags().length>0;
+    paintTags();
+    const tags = h('div',{class:'tagpick'}, chips, picker, newRow);
 
     const delBtn = existing ? h('button',{class:'btn danger',type:'button',text:'Delete',onclick:async()=>{
       if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
@@ -641,8 +731,9 @@ function openCardEditor(opts){
       const t = title.value.trim();
       if(!t){ title.classList.add('bad'); title.focus(); return; }
       const sectionId = secSel.value;
+      addTag(newInput.value);
       const data = { sectionId, title:t, body:body.value.trim().slice(0,20000), url:url.value.trim(),
-        tags: tags.value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,20), status };
+        tags: tagsSel.slice(0,20), status, fav };
       closeSheet();
       if(existing) await Model.saveCardFull({...existing, ...data});
       else await Model.addCard(data);
@@ -650,7 +741,7 @@ function openCardEditor(opts){
     sheet.append(
       h('h3',{text:existing?'Edit card':'New card'}),
       field('Stored in (section / app)', secSel),
-      field('Card text', title), field('Status', stSeg), field('Note', body), field('Link', url), field('Tags', tags),
+      field('Card text', title), field('Status', stSeg), favRow, field('Note', body), field('Link', url), field('Tags', tags),
       h('div',{class:'foot'}, delBtn, h('span',{class:'spacer'}),
         h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
         h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
@@ -665,17 +756,13 @@ function openCardEditor(opts){
 function openSectionEditor(opts){
   const b = curBoard(); if(!b) return;
   const existing = opts.id ? S.sections.get(opts.id) : null;
-  const d = existing ? {...existing} : {name:'',description:'',url:'',color:COLORS[Model.sectionsOf(b.id).length%COLORS.length],width:WIDTHS.S};
+  const d = existing ? {...existing} : {name:'',description:'',url:'',color:COLORS[Model.sectionsOf(b.id).length%COLORS.length]};
   openSheet(sheet=>{
     const name = h('input',{type:'text',maxlength:'80',placeholder:'e.g. Google Drive, Notion, WhatsApp…'}); name.value=d.name||'';
     const desc = h('textarea',{rows:'2',maxlength:'400',placeholder:'What lives here? (optional)'}); desc.value=d.description||'';
     const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:'App link (optional)'}); url.value=d.url||'';
     const sw = h('div',{class:'swatches'});
     COLORS.forEach(c=>sw.append(h('button',{type:'button',class:'swatch','aria-label':c,'aria-pressed':String(d.color===c),style:'background:var(--'+c+')',onclick:()=>{ d.color=c; [...sw.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(COLORS[i]===c))); }})));
-    const wseg = h('div',{class:'seg'});
-    Object.entries({S:'Narrow',M:'Regular',L:'Wide'}).forEach(([k,label])=>{
-      wseg.append(h('button',{type:'button','aria-pressed':String(d.width===WIDTHS[k]),text:label,onclick:()=>{ d.width=WIDTHS[k]; [...wseg.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(Object.values(WIDTHS)[i]===d.width))); }}));
-    });
 
     let delArea = null;
     if(existing){
@@ -695,15 +782,15 @@ function openSectionEditor(opts){
     async function save(){
       const n = name.value.trim();
       if(!n){ name.classList.add('bad'); name.focus(); return; }
-      const data = {name:n, description:desc.value.trim(), url:url.value.trim(), color:d.color, width:d.width};
+      const data = {name:n, description:desc.value.trim(), url:url.value.trim(), color:d.color};
       closeSheet();
       if(existing) await Model.updateSection(existing.id, data);
-      else { const p = findSpot(b.id, d.width); await Model.addSection({...data, boardId:b.id, x:p.x, y:p.y}); }
+      else await Model.addSection({...data, boardId:b.id});
     }
     sheet.append(
       h('h3',{text:existing?'Edit section':'New section'}),
       field('Name', name), field('Description', desc), field('Link', url),
-      field('Color', sw), field('Width', wseg),
+      field('Color', sw),
       delArea,
       h('div',{class:'foot'}, h('span',{class:'spacer'}),
         h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
@@ -844,43 +931,13 @@ function openContentSheet(opts){
 }
 
 /* ---------- free-form layout helpers ---------- */
-function measured(id){ const el = plane.querySelector('[data-id="'+id+'"]'); return el ? {w:el.offsetWidth,h:el.offsetHeight} : null; }
-function findSpot(bid, w){
-  const rects = Model.sectionsByPosition(bid).map(s=>{ const m=measured(s.id); return {x:s.x||0,y:s.y||0,w:(m&&m.w)||s.width||WIDTHS.M,h:(m&&m.h)||200}; });
-  const ph = 180, gap = 16;
-  for(let y=24; y<6000; y+=40){
-    for(let x=24; x<2600; x+=40){
-      const ok = rects.every(r=> x+w+gap<=r.x || x>=r.x+r.w+gap || y+ph+gap<=r.y || y>=r.y+r.h+gap);
-      if(ok) return {x,y};
-    }
-  }
-  return {x:24,y:24};
-}
-async function arrange(){
-  const b = curBoard(); if(!b) return;
-  const secs = Model.sectionsOf(b.id).sort(byName); if(!secs.length) return;
-  const before = secs.map(s=>({id:s.id,x:s.x,y:s.y}));
-  const colW = Math.max(...secs.map(s=>s.width||WIDTHS.M)) + 24;
-  const cols = Math.max(1, Math.floor((board.clientWidth-24)/colW));
-  const heights = new Array(cols).fill(24);
-  const moves = [];
-  secs.forEach((s,i)=>{
-    const c = i % cols;
-    const m = measured(s.id);
-    moves.push({id:s.id, x:24+c*colW, y:heights[c]});
-    heights[c] += ((m&&m.h)||200) + 24;
-  });
-  for(const m of moves) await Model.updateSection(m.id,{x:m.x,y:m.y});
-  toast('Sections arranged A–Z, left to right.',{label:'Undo',run:async()=>{ for(const x of before) await Model.updateSection(x.id,{x:x.x,y:x.y}); }});
-}
-
 /* =====================================================================
    Rendering
    ===================================================================== */
-let renderQueued = false, drag = null;
+let renderQueued = false;
 function scheduleRender(){
   if(renderQueued) return; renderQueued = true;
-  requestAnimationFrame(()=>{ renderQueued=false; if(drag){ drag.pending=true; return; } render(); });
+  requestAnimationFrame(()=>{ renderQueued=false; render(); });
 }
 const ready = () => COLLS.every(c=>S.got[c]);
 
@@ -897,21 +954,27 @@ function render(){
   const searching = !!S.q;
   const listMode = searching && S.listView;
   const isFolders = !!b && b.kind==='folders';
+  const isFav = !!b && b.kind==='favourites';
   const groups = searching && ready() ? searchAll() : null;
+  const tagList = tagsFor(b);
+  if(S.tag && !tagList.some(t=>t.key===S.tag)) S.tag = null;   // that tag no longer exists in this view
   renderChrome(b, groups);
-  board.hidden = listMode || isFolders;
+  board.hidden = listMode || isFolders || isFav;
   foldersEl.hidden = listMode || !isFolders;
+  favsEl.hidden = listMode || !isFav;
   resultsEl.hidden = !listMode;
   if(listMode) renderResults();
+  else if(isFav) renderFavs();
   else if(isFolders) renderFolders(b);
   else renderBoard(b);
   renderSearchBar(b, groups);
+  renderTagSelect(listMode ? [] : tagList);
   applyFlash();
 }
 
 function stepMatch(dir){
-  const scope = board.hidden ? foldersEl : board;
-  const els = [...scope.querySelectorAll('.card.match,.section.match,.frow.match,.irow.match')];
+  const scope = [board,foldersEl,favsEl].find(x=>!x.hidden) || board;
+  const els = [...scope.querySelectorAll('.card.match,.section.match,.frow.match,.irow.match,.fav-tile.match')];
   if(!els.length) return;
   const n = els.length;
   S.matchIdx = S.matchIdx<0 ? (dir>0?0:n-1) : (S.matchIdx+dir+n)%n;
@@ -927,11 +990,12 @@ function renderSearchBar(b, groups){
   if(!S.q){ bar.hidden = true; return; }
   bar.hidden = false;
   if(!groups){ bar.append(h('span',{text:'Searching…'})); return; }
-  let here=0, other=0, otherBoards=0;
-  groups.forEach((a,bid)=>{ if(b && bid===b.id) here=a.length; else { other+=a.length; otherBoards++; } });
+  let here=0, other=0, otherBoards=0, realTotal=0, realBoards=0;
+  groups.forEach((a,bid)=>{ realTotal+=a.length; realBoards++; if(b && bid===b.id) here=a.length; else { other+=a.length; otherBoards++; } });
+  if(b && b.kind==='favourites') here = favMatchCount();
   const listMode = S.listView;
   let text;
-  if(listMode){ const total=here+other; text = total+' result'+(total===1?'':'s')+' across '+groups.size+' board'+(groups.size===1?'':'s'); }
+  if(listMode){ text = realTotal+' result'+(realTotal===1?'':'s')+' across '+realBoards+' board'+(realBoards===1?'':'s'); }
   else {
     text = here ? here+' match'+(here===1?'':'es')+' on this board' : 'No matches on this board';
     if(other) text += ' · '+other+' on '+otherBoards+' other board'+(otherBoards===1?'':'s')+' (see tab badges)';
@@ -960,12 +1024,17 @@ function applyFlash(){
 function renderChrome(b, groups){
   const isFolders = b && b.kind==='folders';
   let stats = '';
+  const isFav = !!b && b.kind==='favourites';
   if(ready() && b){
-    if(isFolders) stats = Model.foldersOf(b.id).length+' folders · '+Model.contentsOf(b.id).length+' items';
+    if(isFav){ const n = Model.favCards().length; stats = n+(n===1?' favourite':' favourites'); }
+    else if(isFolders) stats = Model.foldersOf(b.id).length+' folders · '+Model.contentsOf(b.id).length+' items';
     else { const ss = Model.sectionsOf(b.id); stats = ss.length+' sections · '+ss.reduce((n,s)=>n+Model.cardsIn(s.id).length,0)+' cards'; }
   }
   $('#stats').textContent = stats;
   const tabs = $('#tabs'); tabs.replaceChildren();
+  const favFound = groups ? favMatchCount() : 0;
+  tabs.append(h('div',{class:'tab fav','aria-selected':String(isFav)},
+    h('button',{class:'tab-main',role:'tab','aria-selected':String(isFav),onclick:()=>selectBoard('fav')}, ic(isFav?'starFill':'star',14), 'Fav', favFound ? h('span',{class:'n',title:favFound+' match'+(favFound===1?'':'es'),text:String(favFound)}) : null)));
   Model.boardsSorted().forEach(x=>{
     const active = b && x.id===b.id;
     const found = groups && groups.get(x.id);
@@ -975,15 +1044,101 @@ function renderChrome(b, groups){
   });
   tabs.append(h('div',{class:'tab add'}, h('button',{class:'tab-main',onclick:()=>{ if(!S.store) return toast('Still loading…'); openBoardEditor({}); }}, ic('plus',14),'Board')));
   const hasB = !!b;
-  $('#btnSection').hidden = !hasB || isFolders;
-  $('#btnCard').hidden = !hasB || isFolders;
-  $('#btnArrange').hidden = !hasB || isFolders;
+  $('#btnSection').hidden = !hasB || isFolders || isFav;
+  $('#btnCard').hidden = !hasB || isFolders || isFav;
   $('#btnFolder').hidden = !hasB || !isFolders;
 }
 
 /* ---------- free-form board ---------- */
+/* ---------- tag filter (one tag at a time; tap again to clear) ---------- */
+const tagKey = t => String(t||'').trim().toLowerCase();
+const hasTag = (c,key) => (c.tags||[]).some(t=>tagKey(t)===key);
+function tagsFor(b){
+  if(!ready() || !b || b.kind==='folders') return [];
+  const cards = b.kind==='favourites' ? Model.favCards() : Model.sectionsOf(b.id).flatMap(sec=>Model.cardsIn(sec.id));
+  const m = new Map();
+  cards.forEach(c=>{
+    const seen = new Set();
+    (c.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=m.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; m.set(k,e); });
+  });
+  return [...m.values()].sort((a,b)=>cmp(a.label,b.label));
+}
+function renderTagSelect(tags){
+  const sel = $('#tagSel'); if(!sel) return;
+  if(!tags.length){ sel.hidden = true; return; }
+  sel.hidden = false;
+  sel.replaceChildren(h('option',{value:'',text:'All tags'}), ...tags.map(t=>h('option',{value:t.key,text:t.label+' ('+t.n+')'})));
+  sel.value = S.tag || '';
+  sel.classList.toggle('on', !!S.tag);
+}
+
+function favMatchCount(){
+  if(!S.q) return 0;
+  return Model.favCards().filter(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '))).length;
+}
+
+/* ---------- Favourites board: cards from every board; tap = open the link in a new tab ---------- */
+/* each favourite gets one of the eight section colours, picked "randomly" but fixed per card so it never flickers */
+/* Colours for the Fav tiles: every favourite gets a different section colour (the 8th, grey-blue, is used last).
+   After 8 favourites the colours are reused evenly. Assignment is stable: it only depends on the card ids. */
+const TILE_COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
+function favColorMap(cards){
+  const use = new Map(TILE_COLORS.map(k=>[k,0])), out = new Map();
+  [...cards].sort((a,b)=>String(a.id).localeCompare(String(b.id))).forEach(c=>{
+    let n = 0; for(const ch of String(c.id)) n = (n*31 + ch.charCodeAt(0)) >>> 0;
+    const min = Math.min(...use.values());
+    const cand = TILE_COLORS.filter(k=>use.get(k)===min), pool = cand.filter(k=>k!=='c7');
+    const arr = pool.length ? pool : cand, pick = arr[n % arr.length];
+    out.set(c.id, pick); use.set(pick, use.get(pick)+1);
+  });
+  return out;
+}
+
+function renderFavs(){
+  favsEl.replaceChildren();
+  const wrap = h('div',{class:'favwrap'});
+  favsEl.append(wrap);
+  if(!ready()){ wrap.append(h('div',{class:'fempty',text:'Loading…'})); return; }
+  const all = Model.favCards();
+  if(!all.length){
+    wrap.append(h('div',{class:'fempty'},
+      h('div',{class:'fav-big'}, ic('starFill',26)),
+      h('p',{text:'No favourites yet.'}),
+      h('p',{class:'hint',text:'Open any card and turn on “Favourite”. It will show up here, and tapping it opens its link in a new tab.'})));
+    return;
+  }
+  const list = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
+  if(!list.length){ wrap.append(h('div',{class:'fempty'}, h('p',{text:'No favourites with this tag.'}))); return; }
+  const colors = favColorMap(all);   // computed over ALL favourites so colours don't shift when you filter
+  const tile = c=>{
+    const sec = S.sections.get(c.sectionId), brd = sec && S.boards.get(boardOf(sec));
+    const st = cardStatus(c), href = safeHref(c.url);
+    const isMatch = S.q && hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
+    const longest = Math.max(0, ...String(c.title||'').split(/\s+/).map(w=>w.length));
+    const inner = [ sec ? h('div',{class:'fav-sec',text:sec.name||''}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, tx(c.title||'(untitled)')) ];
+    const main = href
+      ? h('a',{class:'fav-main',href,target:'_blank',rel:'noopener noreferrer','aria-label':(c.title||'Open')+' (opens in a new tab)'}, inner)
+      : h('button',{class:'fav-main',type:'button',onclick:()=>openCardEditor({id:c.id})}, inner);
+    const initial = (Array.from(String(c.title||'').trim())[0]||'').toUpperCase();
+    return h('div',{class:'fav-tile'+(isMatch?' match':''),'data-id':c.id,'data-st':st,'data-initial':initial,style:'--tc:var(--'+(colors.get(c.id)||'c0')+')'}, main,
+      h('div',{class:'fav-board',title:[brd&&brd.name, sec&&sec.name].filter(Boolean).join(' · '),text:(brd&&brd.name)||''}),
+      h('div',{class:'fav-actions'},
+        h('button',{class:'icon-btn','aria-label':'Edit card',title:'Edit card',onclick:()=>openCardEditor({id:c.id})}, ic('edit',15))));
+  };
+  const live = list.filter(c=>cardStatus(c)!=='closed'), closed = list.filter(c=>cardStatus(c)==='closed');
+  if(live.length){ const grid = h('div',{class:'favgrid'}); live.forEach(c=>grid.append(tile(c))); wrap.append(grid); }
+  if(closed.length){
+    const hitClosed = S.q && closed.some(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' ')));
+    const open = S.favClosedOpen || !!hitClosed;
+    wrap.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),onclick:()=>{ S.favClosedOpen=!S.favClosedOpen; render(); }},
+      ic('caret',12), 'Closed', h('span',{class:'cn',text:String(closed.length)})));
+    if(open){ const grid = h('div',{class:'favgrid'}); closed.forEach(c=>grid.append(tile(c))); wrap.append(grid); }
+  }
+}
+
 function cycleStatus(c){
   const cur = cardStatus(c), next = STATUS_ORDER[(STATUS_ORDER.indexOf(cur)+1)%STATUS_ORDER.length];
+  if(next==='closed') toast('Moved under “Closed”.',{label:'Undo',run:()=>Model.updateCard(c.id,{status:cur})});
   return Model.updateCard(c.id,{status:next});
 }
 function cardEl(c, sec){
@@ -991,13 +1146,13 @@ function cardEl(c, sec){
   const st = cardStatus(c);
   const hasNote = !!(c.body && c.body.trim());
   const isMatch = S.q && hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
-  const el = h('div',{class:'card'+(isMatch?' match':''),'data-id':c.id,tabindex:'0',style:'--sc:'+secColor(sec),
-      onclick:e=>{ if(e.target.closest('.grip')||e.target.closest('a')||e.target.closest('.sdot')) return; openCardEditor({id:c.id}); },
+  const el = h('div',{class:'card'+(isMatch?' match':''),'data-id':c.id,'data-st':st,tabindex:'0',style:'--sc:'+secColor(sec),
+      onclick:e=>{ if(e.target.closest('a')||e.target.closest('.sdot')) return; openCardEditor({id:c.id}); },
       onkeydown:e=>{ if(e.key==='Enter' && e.target===el) openCardEditor({id:c.id}); }},
-    h('div',{class:'grip','aria-label':'Drag card',onpointerdown:e=>startCardDrag(e,c.id)}, ic('grip',16)),
     h('div',{class:'c-main'},
       h('div',{class:'c-top'},
         h('div',{class:'c-title'}, tx(c.title||'(untitled)')),
+        c.fav===true ? h('span',{class:'c-fav',title:'On Favourites','aria-label':'On Favourites'}, ic('starFill',13)) : null,
         hasNote ? h('span',{class:'c-note',title:'Has a note — open the card to read it','aria-label':'Has a note'}, ic('note',14)) : null,
         h('button',{class:'sdot',type:'button','data-s':st,title:STATUS[st].label+' — tap to change','aria-label':'Status: '+STATUS[st].label+'. Tap to change.',
           onclick:e=>{ e.stopPropagation(); cycleStatus(c); }})),
@@ -1007,7 +1162,12 @@ function cardEl(c, sec){
   return el;
 }
 
+const ROW_UNIT = 8, ROW_GAP = 16;
+function fitSpan(el){ el.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((el.offsetHeight + ROW_GAP) / ROW_UNIT)); }
+const secRO = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(entries=>entries.forEach(e=>fitSpan(e.target))) : null;
+
 function renderBoard(b){
+  if(secRO) secRO.disconnect();
   plane.replaceChildren();
   if(!ready()){ plane.append(h('div',{class:'empty'},h('p',{text:'Loading your map…'}))); return; }
   if(!b){
@@ -1016,19 +1176,29 @@ function renderBoard(b){
       h('button',{class:'btn primary',onclick:()=>openBoardEditor({})}, ic('plus',14),'New board')));
     return;
   }
-  const secs = Model.sectionsByPosition(b.id);
+  const secs = Model.sectionsSorted(b.id);   // A–Z; the grid places them
   if(!secs.length){
     plane.append(h('div',{class:'empty'},
       h('h2',{text:'Map your information'}),
       h('p',{text:'Add a section for each app or place where data lives, then add cards for what it stores. Drag cards between sections as things move.'}),
       h('button',{class:'btn primary',onclick:()=>openSectionEditor({})}, ic('plus',14),'Add first section')));
-    plane.style.removeProperty('--pw'); plane.style.removeProperty('--ph'); return;
+    return;
   }
   secs.forEach(sec=>{
     const all = Model.cardsIn(sec.id);
+    const shown = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
     const href = safeHref(sec.url);
-    const list = h('div',{class:'s-cards','data-section':sec.id});
-    all.forEach(c=>list.append(cardEl(c,sec)));
+    const list = h('div',{class:'s-cards','data-section':sec.id,'data-empty':S.tag?'No cards with this tag':'No cards yet'});
+    const live = shown.filter(c=>cardStatus(c)!=='closed'), closed = shown.filter(c=>cardStatus(c)==='closed');
+    live.forEach(c=>list.append(cardEl(c,sec)));
+    if(closed.length){
+      const hitClosed = S.q && closed.some(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' ')));
+      const open = S.closedOpen.has(sec.id) || !!hitClosed;
+      list.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),
+        onclick:()=>{ if(S.closedOpen.has(sec.id)) S.closedOpen.delete(sec.id); else S.closedOpen.add(sec.id); render(); }},
+        ic('caret',12), 'Closed', h('span',{class:'cn',text:String(closed.length)})));
+      if(open){ const box = h('div',{class:'closed-box'}); closed.forEach(c=>box.append(cardEl(c,sec))); list.append(box); }
+    }
     const quick = h('input',{class:'quick',type:'text',placeholder:'Add a card…',enterkeyhint:'done',maxlength:'200','aria-label':'Add card to '+sec.name,
       onkeydown:async e=>{
         if(e.key!=='Enter') return;
@@ -1037,21 +1207,19 @@ function renderBoard(b){
         await Model.addCard({sectionId:sec.id,title:v});
       }});
     const secMatch = S.q && hit((sec.name||'')+' '+(sec.description||'')+' '+(sec.url||''));
-    const el = h('div',{class:'section'+(secMatch?' match':''),'data-id':sec.id,
-        style:'left:'+(sec.x||0)+'px;top:'+(sec.y||0)+'px;width:'+(sec.width||WIDTHS.M)+'px;--sc:'+secColor(sec)},
+    const el = h('div',{class:'section'+(secMatch?' match':'')+(S.tag&&!shown.length?' dim':''),'data-id':sec.id,
+        style:'--sc:'+secColor(sec)},
       h('div',{class:'s-head'},
-        h('div',{class:'grip','aria-label':'Drag section',onpointerdown:e=>startSectionDrag(e,sec.id)}, ic('grip',16)),
         h('button',{class:'s-title',title:'Edit section',onclick:()=>openSectionEditor({id:sec.id})}, tx(sec.name||'Untitled')),
-        h('span',{class:'s-count',text:String(all.length)}),
+        h('span',{class:'s-count',text:S.tag ? shown.length+'/'+all.length : String(all.length)}),
         href ? h('a',{class:'icon-btn',href,target:'_blank',rel:'noopener noreferrer','aria-label':'Open app'}, ic('external',15)) : null,
         h('button',{class:'icon-btn','aria-label':'Add card with options',title:'Add card',onclick:()=>openCardEditor({sectionId:sec.id})}, ic('plus',16))),
       sec.description ? h('div',{class:'s-desc'}, tx(sec.description)) : null,
       list, quick);
     plane.append(el);
+    fitSpan(el);
+    if(secRO) secRO.observe(el);
   });
-  let maxR=0, maxB=0;
-  plane.querySelectorAll('.section').forEach(el=>{ maxR=Math.max(maxR,el.offsetLeft+el.offsetWidth); maxB=Math.max(maxB,el.offsetTop+el.offsetHeight); });
-  plane.style.setProperty('--pw',(maxR+320)+'px'); plane.style.setProperty('--ph',(maxB+320)+'px');
   if(S.refocus){ const inp = plane.querySelector('.section[data-id="'+S.refocus+'"] .quick'); if(inp) inp.focus(); S.refocus=null; }
 }
 
@@ -1225,102 +1393,6 @@ function renderResults(){
 }
 
 /* =====================================================================
-   Drag & drop (free-form board)
-   ===================================================================== */
-function beginDragUi(){ document.body.classList.add('dragging-ui'); }
-function endDragUi(){ document.body.classList.remove('dragging-ui'); }
-
-function startCardDrag(e, cardId){
-  if(e.button!==undefined && e.button!==0) return;
-  e.preventDefault();
-  const el = e.currentTarget.closest('.card'); const r = el.getBoundingClientRect();
-  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){}
-  drag = {kind:'card', id:cardId, el, w:r.width, offX:e.clientX-r.left, offY:e.clientY-r.top, sx:e.clientX, sy:e.clientY, x:e.clientX, y:e.clientY, started:false, ghost:null, line:null, target:null, raf:0, pending:false};
-  window.addEventListener('pointermove', onCardMove);
-  window.addEventListener('pointerup', onCardUp);
-  window.addEventListener('pointercancel', onCardUp);
-}
-function updateCardTarget(){
-  drag.ghost.style.left = (drag.x-drag.offX)+'px'; drag.ghost.style.top = (drag.y-drag.offY)+'px';
-  const el = document.elementFromPoint(drag.x, drag.y);
-  const sec = el && el.closest ? el.closest('.section') : null;
-  if(drag.hl && drag.hl!==sec){ drag.hl.classList.remove('drop-target'); drag.hl=null; }
-  if(sec){ sec.classList.add('drop-target'); drag.hl=sec; drag.target={sectionId:sec.dataset.id}; }
-  else drag.target = null;
-}
-function cardLoop(){
-  if(!drag || drag.kind!=='card' || !drag.started) return;
-  const r = board.getBoundingClientRect(), m = 48; let dx=0, dy=0;
-  if(drag.y<r.top+m) dy=-14; else if(drag.y>r.bottom-m) dy=14;
-  if(drag.x<r.left+m) dx=-14; else if(drag.x>r.right-m) dx=14;
-  if(dx||dy){ board.scrollLeft+=dx; board.scrollTop+=dy; updateCardTarget(); }
-  drag.raf = requestAnimationFrame(cardLoop);
-}
-function onCardMove(e){
-  if(!drag) return;
-  drag.x=e.clientX; drag.y=e.clientY;
-  if(!drag.started){
-    if(Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy)<5) return;
-    drag.started = true; beginDragUi();
-    const g = drag.el.cloneNode(true); g.classList.add('ghost'); g.style.width = drag.w+'px'; g.removeAttribute('tabindex');
-    document.body.append(g); drag.ghost = g; drag.el.classList.add('dragging');
-    drag.raf = requestAnimationFrame(cardLoop);
-  }
-  e.preventDefault();
-  updateCardTarget();
-}
-async function onCardUp(){
-  window.removeEventListener('pointermove', onCardMove);
-  window.removeEventListener('pointerup', onCardUp);
-  window.removeEventListener('pointercancel', onCardUp);
-  const d = drag; if(!d) return;
-  cancelAnimationFrame(d.raf);
-  if(d.hl) d.hl.classList.remove('drop-target');
-  if(d.ghost) d.ghost.remove();
-  d.el.classList.remove('dragging');
-  endDragUi();
-  drag = null;
-  if(d.started && d.target){ await Model.moveCard(d.id, d.target.sectionId); }
-  if(d.pending || d.started) scheduleRender();
-}
-
-function startSectionDrag(e, sectionId){
-  if(e.button!==undefined && e.button!==0) return;
-  e.preventDefault();
-  const sec = S.sections.get(sectionId); if(!sec) return;
-  const el = e.currentTarget.closest('.section');
-  try{ e.currentTarget.setPointerCapture(e.pointerId); }catch(_){}
-  drag = {kind:'section', id:sectionId, el, sx:e.clientX, sy:e.clientY, ox:sec.x||0, oy:sec.y||0, scx:board.scrollLeft, scy:board.scrollTop, started:false, nx:sec.x||0, ny:sec.y||0, pending:false};
-  window.addEventListener('pointermove', onSecMove);
-  window.addEventListener('pointerup', onSecUp);
-  window.addEventListener('pointercancel', onSecUp);
-}
-function onSecMove(e){
-  if(!drag) return;
-  if(!drag.started){
-    if(Math.hypot(e.clientX-drag.sx, e.clientY-drag.sy)<4) return;
-    drag.started=true; beginDragUi(); drag.el.classList.add('lifting');
-  }
-  e.preventDefault();
-  drag.nx = Math.max(0, drag.ox + (e.clientX-drag.sx) + (board.scrollLeft-drag.scx));
-  drag.ny = Math.max(0, drag.oy + (e.clientY-drag.sy) + (board.scrollTop-drag.scy));
-  drag.el.style.left = drag.nx+'px'; drag.el.style.top = drag.ny+'px';
-}
-async function onSecUp(){
-  window.removeEventListener('pointermove', onSecMove);
-  window.removeEventListener('pointerup', onSecUp);
-  window.removeEventListener('pointercancel', onSecUp);
-  const d = drag; if(!d) return;
-  d.el.classList.remove('lifting'); endDragUi(); drag = null;
-  if(d.started){
-    const x = Math.round(d.nx/10)*10, y = Math.round(d.ny/10)*10;
-    d.el.style.left = x+'px'; d.el.style.top = y+'px';
-    if(x!==d.ox || y!==d.oy) await Model.updateSection(d.id,{x,y});
-  }
-  if(d.pending) scheduleRender();
-}
-
-/* =====================================================================
    Header wiring
    ===================================================================== */
 (function buildHeader(){
@@ -1334,8 +1406,8 @@ async function onSecUp(){
   $('#actions').append(
     h('button',{class:'btn primary',id:'btnSection',hidden:true,onclick:guard(()=>openSectionEditor({}))}, ic('plus',14),'Section'),
     h('button',{class:'btn',id:'btnCard',hidden:true,onclick:guard(()=>openCardEditor({}))}, ic('plus',14),'Card'),
-    h('button',{class:'btn',id:'btnArrange',hidden:true,title:'Line sections up alphabetically',onclick:arrange}, ic('arrange',14),'Arrange A–Z'),
-    h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:guard(()=>openFolderSheet({}))}, ic('plus',14),'Folder')
+    h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:guard(()=>openFolderSheet({}))}, ic('plus',14),'Folder'),
+    h('select',{id:'tagSel',class:'tagsel',hidden:true,'aria-label':'Filter by tag',title:'Filter by tag',onchange:e=>{ S.tag = e.target.value || null; S.matchIdx=-1; render(); }})
   );
 })();
 
