@@ -21,7 +21,7 @@
 -->
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="color-scheme" content="light">
 <title>DataMap</title>
 <meta name="application-name" content="DataMap">
@@ -43,7 +43,7 @@
   --c0:#14a38b; --c1:#3b73d9; --c2:#7a5ad8; --c3:#d4508f; --c4:#e0644a; --c5:#d99a1e; --c6:#7d9a2a; --c7:#64748b;
   box-sizing:border-box; padding-bottom:env(safe-area-inset-bottom,0px);
 }
-html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;background:var(--bg)}
+html{scroll-padding-top:env(safe-area-inset-top,0px);height:100%;background:var(--panel)}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
 body{margin:0;height:100%;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;
@@ -84,9 +84,11 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 /* views */
 main{flex:1;min-height:0;display:flex}
 #board,#folders,#favs,#results{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch}
-/* Sections stack tightly (only the normal 16px gap, no empty space) in as many columns as fit the screen
-   (min 260px each). Order is A–Z: down the first column, then the next column, and so on. */
-#plane{position:relative;display:block;column-width:260px;column-gap:16px;padding:16px 16px 48px;min-height:100%}
+/* Sections are laid out by the app (layoutSections): real columns holding whole sections, only the normal
+   16px gap, as many columns as fit the screen (min 260px). Order is A–Z: down the first column, then the next. */
+#plane{position:relative;display:block;padding:16px 16px 48px;min-height:100%}
+.cols{display:flex;gap:16px;align-items:flex-start}
+.col{flex:1 1 0;min-width:0;max-width:380px;display:flex;flex-direction:column;gap:16px}
 .empty{position:absolute;left:50%;top:80px;transform:translateX(-50%);width:min(360px,calc(100vw - 40px));text-align:center;color:var(--muted);
   background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:22px}
 .empty h2{margin:0 0 6px;color:var(--ink);font-size:16px}
@@ -95,7 +97,7 @@ main{flex:1;min-height:0;display:flex}
 .flash{animation:flash 2s ease-out}
 
 /* sections */
-.section{position:relative;min-width:0;width:100%;margin:0 0 16px;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.section{position:relative;min-width:0;width:100%;margin:0;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
 .s-head{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:color-mix(in srgb,var(--sc) 13%,var(--panel));border-radius:8px 8px 0 0}
 .s-title{flex:1;min-width:0;text-align:left;border:0;background:none;cursor:pointer;font-weight:650;font-size:14px;padding:3px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .s-count{font-size:11px;color:var(--muted);padding:0 2px}
@@ -294,16 +296,25 @@ main{flex:1;min-height:0;display:flex}
 .tagpick .newtag{margin-top:10px}
 .overlay{touch-action:none;-webkit-user-select:none;user-select:none}
 .sheet{touch-action:pan-y;-webkit-user-select:text;user-select:text}
-.fav-board{right:18px}
+.fav-board{right:58px}
 .seg button{flex:1 1 auto}
 @media (min-width:721px){
-  #top{display:grid;grid-template-columns:250px minmax(0,1fr) 190px 220px;column-gap:12px;align-items:center}
+  #top{display:grid;grid-template-columns:210px minmax(0,1fr) 170px 200px;column-gap:12px;align-items:center}
   .brand{min-width:0;overflow:hidden}
   .brand h1{flex:none}
   #stats{overflow:hidden;text-overflow:ellipsis}
   #actions{display:contents}
   #actions .tagsel{grid-column:3;width:100%;max-width:none}
   .act-btns{grid-column:4;display:flex;gap:6px;justify-content:flex-end}
+}
+/* tablets (iPad portrait etc.): title + search share the first row, tag filter + buttons sit on a second row */
+@media (min-width:721px) and (max-width:960px){
+  #top{grid-template-columns:minmax(0,210px) minmax(0,1fr);grid-template-areas:"brand search" "actions actions";gap:8px 12px}
+  .brand{grid-area:brand}
+  .search{grid-area:search;width:100%;min-width:0}
+  #actions{grid-area:actions;display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+  #actions .tagsel{grid-column:auto;flex:0 1 280px;min-width:0;width:auto;max-width:none}
+  .act-btns{grid-column:auto;flex:none;margin-left:auto}
 }
 .act-btns{display:flex;gap:6px}
 @media (max-width:720px){
@@ -363,6 +374,31 @@ main{flex:1;min-height:0;display:flex}
 .sheet.fit .tpick{min-height:34px;padding:0 12px;font-size:13.5px}
 .sheet.fit .tagpick .newtag{margin-top:6px}
 .sheet.fit .sw-row{margin-bottom:6px}
+
+/* ---------- round 23: tag colours, favourites picker ---------- */
+.tag{background:var(--tg-bg,#eef1f6);color:#3d4a63;font-weight:500;padding:1px 9px}
+.tpick{background:var(--tg-bg,var(--card));color:#3d4a63;border-color:transparent;font-weight:550}
+.tpick[aria-pressed="true"]{background:var(--tg-bg2,var(--card));border-color:var(--tg-base,var(--accent));box-shadow:inset 0 0 0 1px var(--tg-base,var(--accent));font-weight:650}
+.tpick[aria-pressed="true"]::before{content:"✓";margin-right:6px;font-weight:800}
+.fchip{display:inline-flex;align-items:center;min-height:34px;padding:0 12px;border-radius:999px;border:1px solid var(--line2);background:#eef1f6;color:var(--navy,#1c2b4a);font-weight:550;font-size:13px;cursor:pointer}
+.fchip:not([aria-pressed="true"]){opacity:.75}
+.fchip[aria-pressed="true"]{border-color:var(--navy,#1c2b4a);box-shadow:inset 0 0 0 1px var(--navy,#1c2b4a);font-weight:700}
+.fchip[aria-pressed="true"]::before{content:"✓";margin-right:6px;font-weight:800}
+.favfield{margin:0}
+.favpick{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:0 0 8px}
+.favpick .fp-l{font-size:12px;color:var(--muted);font-weight:600;margin-right:2px}
+.sheet.fit .favpick{margin-bottom:6px}
+.sheet.fit .bextra{display:block}
+
+/* ---------- round 24: tile colour choice ---------- */
+.favcolor{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 8px}
+.favcolor .fp-l{font-size:12px;color:var(--muted);font-weight:600;margin-right:2px}
+.cswatch{width:30px;height:30px;border-radius:50%;border:0;padding:0;cursor:pointer;flex:none;background:color-mix(in srgb,var(--cs) 30%,#fff);box-shadow:inset 0 0 0 2px var(--cs)}
+.cswatch[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--cs),0 0 0 2px #fff,0 0 0 4px var(--ink)}
+.cswatch.auto{width:auto;height:30px;padding:0 12px;border-radius:999px;background:#eef1f6;color:var(--navy,#1c2b4a);font-size:12.5px;font-weight:600;box-shadow:inset 0 0 0 1px var(--line2)}
+.cswatch.auto[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--line2),0 0 0 2px #fff,0 0 0 4px var(--ink)}
+.sheet.fit .favcolor{margin-bottom:6px}
+@media (pointer:coarse){.cswatch{width:34px;height:34px}.cswatch.auto{height:34px}}
 </style>
 </head>
 <body>
@@ -410,7 +446,7 @@ const firebaseConfig = {
    Every document below is a Firestore document in a top-level collection
    of the same name. Access is controlled by firestore.rules.
 
-   boards/<id>     { name, kind:'board'|'folders', fav (also shown on Fav), order, createdAt, updatedAt }
+   boards/<id>     { name, kind:'board'|'folders'|'favs', tags[], fav, favIn[], createdAt, updatedAt }
                    kind 'board'   = free-form board of sections + cards
                    kind 'folders' = folder tree
 
@@ -423,10 +459,12 @@ const firebaseConfig = {
                      status: 'dev'|'live'|'dormant'|'closed'  (default: dormant;
                      older docs: 'active' reads as live, 'developing' as dormant,
                      'inactive' as closed),
-                     fav: true|false  (true = also shown on the Favourites board), ... }
+                     fav: true|false, favColor: 'c0'..'c7' (optional tile colour), favIn: [favourites-board ids] (which Fav boards show it;
+                     older docs with only fav:true are in the main 'fav' board), ... }
 
-   Favourites is NOT stored: it is a built-in first tab that lists every card
-   with fav:true from all boards (A–Z). One card, one source of truth.
+   Favourites boards: the built-in 'Fav' tab (virtual, id 'fav') plus any boards of kind 'favs'
+   (e.g. 'Clin Fav'). They store nothing: each lists the cards / boards whose favIn contains its id.
+   Boards (kind board|folders) can also have tags[], sharing the same tag list as cards.
                    One piece of information stored in a section.
                    Moving a card only changes sectionId.
                    Cards are sorted by status (Active, Dormant, Closed), then A–Z.
@@ -442,12 +480,16 @@ const firebaseConfig = {
    ===================================================================== */
 
 const COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
-const KINDS = {board:'Free-form board', folders:'Folder structure'};
+const KINDS = {board:'Free-form board', folders:'Folder structure', favs:'Favourites board'};
 const COLLS = ['boards','sections','cards','folders','contents'];
 const STATUS = {dev:{label:'Developing'}, live:{label:'Live'}, dormant:{label:'Dormant'}, closed:{label:'Closed'}};
 const STATUS_ORDER = ['dev','live','dormant','closed'];   // sort order: Developing first
 const cardStatus = c => { const v = c && c.status; if(v==='active') return 'live'; if(v==='developing') return 'dormant'; if(v==='inactive') return 'closed'; return STATUS[v] ? v : 'dormant'; };
 const FAV_BOARD = {id:'fav', kind:'favourites', name:'Fav'};
+const FAV_ID = 'fav';
+const favIds = x => Array.isArray(x && x.favIn) ? x.favIn : ((x && x.fav===true) ? [FAV_ID] : []);
+const inFav = (x, id) => favIds(x).includes(id);
+const isFavKind = b => !!b && (b.kind==='favourites' || b.kind==='favs');
 
 const S = { boards:new Map(), sections:new Map(), cards:new Map(), folders:new Map(), contents:new Map(),
   got:{boards:false,sections:false,cards:false,folders:false,contents:false},
@@ -531,7 +573,7 @@ async function run(promise){
 
 const Model = {
   /* boards */
-  boardsSorted(){ const rank = b => b.kind==='folders' ? 1 : 0; return [...S.boards.values()].sort((a,b)=>(rank(a)-rank(b))||byName(a,b)); },
+  boardsSorted(){ const rank = b => b.kind==='favs' ? 0 : (b.kind==='folders' ? 2 : 1); return [...S.boards.values()].sort((a,b)=>(rank(a)-rank(b))||byName(a,b)); },
   addBoard(d){ const id=uid('b'); const t=now();
     return run(S.store.set('boards',id,{name:'Board',kind:'board',...d,createdAt:t,updatedAt:t})).then(r=>r===null?null:id); },
   updateBoard(id,p){ return run(S.store.update('boards',id,{...p,updatedAt:now()})); },
@@ -561,8 +603,9 @@ const Model = {
   },
 
   /* cards */
-  favBoards(){ return [...S.boards.values()].filter(b=>b.fav===true).sort(byName); },
-  favCards(){ return [...S.cards.values()].filter(c=>c.fav===true && S.sections.has(c.sectionId)).sort(byStatusTitle); },
+  favBoardList(){ return [FAV_BOARD, ...[...S.boards.values()].filter(b=>b.kind==='favs').sort(byName)]; },
+  favBoards(id){ id = id || FAV_ID; return [...S.boards.values()].filter(b=>b.kind!=='favs' && inFav(b,id)).sort(byName); },
+  favCards(id){ id = id || FAV_ID; return [...S.cards.values()].filter(c=>inFav(c,id) && S.sections.has(c.sectionId)).sort(byStatusTitle); },
   cardsIn(sectionId){ return [...S.cards.values()].filter(c=>c.sectionId===sectionId).sort(byStatusTitle); },
   addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'dormant',...d,createdAt:t,updatedAt:t})).then(()=>id); },
   updateCard(id,p){ return run(S.store.update('cards',id,{...p,updatedAt:now()})); },
@@ -724,6 +767,61 @@ function openSheet(build){
 }
 function closeSheet(){ if(sheetClose) sheetClose(); }
 document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
+/* every tag used anywhere (cards AND boards) — the one shared list */
+function knownTagMap(){
+  const m = new Map();
+  S.cards.forEach(c=>(c.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !m.has(k)) m.set(k,String(t).trim()); }));
+  S.boards.forEach(b=>(b.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !m.has(k)) m.set(k,String(t).trim()); }));
+  return m;
+}
+/* tag chips: tap to select / unselect; a box adds new tags. Returns {el, value(), flush()} */
+function makeTagPicker(initial){
+  const sel = new Set(), labels = knownTagMap();
+  (initial||[]).forEach(t=>{ const k=tagKey(t); if(!k) return; if(!labels.has(k)) labels.set(k,String(t).trim()); sel.add(k); });
+  const box = h('div',{class:'tpicks'});
+  const input = h('input',{type:'text',maxlength:'40',placeholder:'New tag (comma for several)','aria-label':'New tag'});
+  function paint(){
+    const items = [...labels.entries()].sort((a,b)=>cmp(a[1],b[1]));
+    box.replaceChildren(...(items.length
+      ? items.map(([k,label])=>h('button',{type:'button',class:'tpick',style:tagStyle(label),'aria-pressed':String(sel.has(k)),onclick:()=>{ if(sel.has(k)) sel.delete(k); else sel.add(k); paint(); }}, label))
+      : [h('span',{class:'tnone',text:'No tags yet — add one below.'})]));
+  }
+  function add(raw){
+    String(raw||'').split(',').forEach(t=>{
+      t = t.trim().slice(0,40); const k = tagKey(t);
+      if(!k || (!sel.has(k) && sel.size>=20)) return;
+      if(!labels.has(k)) labels.set(k,t);
+      sel.add(k);
+    });
+    paint();
+  }
+  input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); add(input.value); input.value=''; } });
+  paint();
+  const el = h('div',{class:'tagpick'}, box, h('div',{class:'newtag'}, input, h('button',{type:'button',class:'btn sm',text:'Add',onclick:()=>{ add(input.value); input.value=''; input.focus(); }})));
+  return {el, flush:()=>{ add(input.value); input.value=''; }, value:()=>[...sel].map(k=>labels.get(k)).sort(cmp).slice(0,20)};
+}
+/* “Favourite” switch + which favourites board(s) it shows on. Returns {el, ids()} */
+function makeFavPicker(initial, initialColor){
+  const boards = Model.favBoardList();
+  const set = new Set((initial||[]).filter(id=>boards.some(b=>b.id===id)));
+  const sw = h('button',{type:'button',class:'switch',role:'switch','aria-label':'Favourite'}, h('span',{class:'knob'}));
+  const chips = h('div',{class:'favpick'});
+  let color = TILE_COLORS.includes(initialColor) ? initialColor : '';
+  const colorBox = h('div',{class:'favcolor'});
+  const row = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), sw);
+  function paint(){
+    sw.setAttribute('aria-checked', String(set.size>0));
+    chips.hidden = !(set.size>0 && boards.length>1);
+    chips.replaceChildren(h('span',{class:'fp-l',text:'Show on'}), ...boards.map(b=>h('button',{type:'button',class:'fchip','aria-pressed':String(set.has(b.id)),onclick:()=>{ if(set.has(b.id)) set.delete(b.id); else set.add(b.id); paint(); }}, b.name||'Fav')));
+    colorBox.hidden = set.size===0;
+    colorBox.replaceChildren(h('span',{class:'fp-l',text:'Tile colour'}),
+      h('button',{type:'button',class:'cswatch auto','aria-pressed':String(!color),'aria-label':'Automatic colour',onclick:()=>{ color=''; paint(); }}, 'Auto'),
+      ...TILE_COLORS.map(k=>h('button',{type:'button',class:'cswatch','aria-pressed':String(color===k),'aria-label':'Tile colour '+k,style:'--cs:var(--'+k+')',onclick:()=>{ color=k; paint(); }})));
+  }
+  sw.addEventListener('click',()=>{ if(set.size) set.clear(); else set.add(boards[0].id); paint(); });
+  paint();
+  return {el:h('div',{class:'favfield'}, row, chips, colorBox), ids:()=>boards.filter(b=>set.has(b.id)).map(b=>b.id), color:()=>color};
+}
 function field(label, input, hint){ return h('div',{class:'f'}, h('label',{text:label}), input, hint?h('p',{class:'hint',text:hint}):null); }
 
 /* ---------- board editor ---------- */
@@ -732,24 +830,26 @@ function openBoardEditor(opts){
   const d = existing ? {...existing} : {name:'',kind:'board'};
   openSheet(sheet=>{
     const name = h('input',{type:'text',maxlength:'60',placeholder:'e.g. Clinic apps, Personal, Documents'}); name.value = d.name||'';
-    let fav = d.fav === true;
-    const favSw = h('button',{type:'button',class:'switch',role:'switch','aria-checked':String(fav),'aria-label':'Favourite',onclick:()=>{ fav=!fav; favSw.setAttribute('aria-checked',String(fav)); }}, h('span',{class:'knob'}));
-    const favRow = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), favSw);
+    const favP = makeFavPicker(favIds(d), d.favColor);
+    const tagP = makeTagPicker(d.tags||[]);
+    const extra = h('div',{class:'bextra'}, favP.el, field('Tags', tagP.el));
+    const setExtra = ()=>{ extra.hidden = d.kind==='favs'; };
     let kindField = null;
     if(!existing){
       const seg = h('div',{class:'seg'});
       Object.entries(KINDS).forEach(([k,label])=>{
-        seg.append(h('button',{type:'button','aria-pressed':String(d.kind===k),onclick:()=>{ d.kind=k; [...seg.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(KINDS)[i]===k))); }}, ic(k==='board'?'board':'folder',14), label));
+        seg.append(h('button',{type:'button','aria-pressed':String(d.kind===k),onclick:()=>{ d.kind=k; [...seg.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(KINDS)[i]===k))); setExtra(); }}, ic(k==='board'?'board':(k==='folders'?'folder':'starFill'),14), label));
       });
-      kindField = field('Type', seg, 'Free-form: sections and cards you place anywhere. Folder structure: a nested tree of folders.');
+      kindField = field('Type', seg, 'Free-form: sections and cards. Folder structure: nested folders. Favourites board: a launcher page for the cards and boards you mark as favourites.');
     }
+    setExtra();
     let delArea = null;
     if(existing && S.boards.size>1){
       const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete board',onclick:async()=>{
-        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again — deletes everything on it'; return; }
+        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent=d.kind==='favs'?'Tap again to delete this favourites board':'Tap again — deletes everything on it'; return; }
         closeSheet();
         const rest = Model.boardsSorted().filter(b=>b.id!==existing.id);
-        if(S.boardId===existing.id) selectBoard(rest[0].id);
+        if(S.boardId===existing.id) selectBoard(rest.length?rest[0].id:'fav');
         await Model.deleteBoard(existing.id);
       }});
       delArea = h('div',{class:'f'}, delBtn);
@@ -757,13 +857,16 @@ function openBoardEditor(opts){
     async function save(){
       const n = name.value.trim();
       if(!n){ name.classList.add('bad'); name.focus(); return; }
+      tagP.flush();
+      const extraData = d.kind==='favs' ? {} : {fav:favP.ids().length>0, favIn:favP.ids(), favColor:favP.color(), tags:tagP.value()};
       closeSheet();
-      if(existing) await Model.updateBoard(existing.id,{name:n,fav});
-      else { const id = await Model.addBoard({name:n,kind:d.kind,fav}); if(id){ clearSearch(); selectBoard(id); } }
+      if(existing) await Model.updateBoard(existing.id,{name:n,...extraData});
+      else { const id = await Model.addBoard({name:n,kind:d.kind,...extraData}); if(id){ clearSearch(); selectBoard(id); } }
     }
+    sheet.classList.add('fit');
     sheet.append(
       h('h3',{text:existing?'Edit board':'New board'}),
-      field('Name', name), kindField, favRow, delArea,
+      field('Name', name), kindField, extra, delArea,
       h('div',{class:'foot'}, h('span',{class:'spacer'}),
         h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
         h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
@@ -785,7 +888,6 @@ function openCardEditor(opts){
   if(!secs.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
   const d = existing ? {...existing} : {sectionId:opts.sectionId||secs[0].id, title:'', body:'', url:'', tags:[], status:'dormant'};
   let status = cardStatus(d);
-  let fav = d.fav === true;
   if(!secs.some(s=>s.id===d.sectionId)) d.sectionId = secs[0].id;
 
   openSheet(sheet=>{
@@ -796,33 +898,10 @@ function openCardEditor(opts){
     const stSeg = h('div',{class:'seg stseg'});
     STATUS_ORDER.forEach(k=>{ stSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{ status=k; [...stSeg.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }}, h('span',{class:'sdot static','data-s':k}), STATUS[k].label)); });
     const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:'Optional link to open it'}); url.value = d.url||'';
-    const favSw = h('button',{type:'button',class:'switch',role:'switch','aria-checked':String(fav),'aria-label':'Favourite',onclick:()=>{ fav=!fav; favSw.setAttribute('aria-checked',String(fav)); }}, h('span',{class:'knob'}));
-    const favRow = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), favSw);
-    /* tags: every known tag is a chip; tap to select / unselect (like Status). New tags are added below. */
-    const tagSel = new Set(), tagLabels = new Map();
-    S.cards.forEach(c=>(c.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !tagLabels.has(k)) tagLabels.set(k,String(t).trim()); }));
-    (d.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k) return; if(!tagLabels.has(k)) tagLabels.set(k,String(t).trim()); tagSel.add(k); });
-    const tagsBox = h('div',{class:'tpicks'});
-    const newInput = h('input',{type:'text',maxlength:'40',placeholder:'New tag (comma for several)','aria-label':'New tag'});
-    function paintTags(){
-      const items = [...tagLabels.entries()].sort((a,b)=>cmp(a[1],b[1]));
-      tagsBox.replaceChildren(...(items.length
-        ? items.map(([k,label])=>h('button',{type:'button',class:'tpick','aria-pressed':String(tagSel.has(k)),onclick:()=>{ if(tagSel.has(k)) tagSel.delete(k); else tagSel.add(k); paintTags(); }}, label))
-        : [h('span',{class:'tnone',text:'No tags yet — add one below.'})]));
-    }
-    function addTag(raw){
-      String(raw||'').split(',').forEach(t=>{
-        t = t.trim().slice(0,40); const k = tagKey(t);
-        if(!k || (!tagSel.has(k) && tagSel.size>=20)) return;
-        if(!tagLabels.has(k)) tagLabels.set(k,t);
-        tagSel.add(k);
-      });
-      paintTags();
-    }
-    newInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); addTag(newInput.value); newInput.value=''; } });
-    paintTags();
-    const tags = h('div',{class:'tagpick'}, tagsBox,
-      h('div',{class:'newtag'}, newInput, h('button',{type:'button',class:'btn sm',text:'Add',onclick:()=>{ addTag(newInput.value); newInput.value=''; newInput.focus(); }})));
+    const favP = makeFavPicker(favIds(d), d.favColor);
+    const favRow = favP.el;
+    const tagP = makeTagPicker(d.tags||[]);
+    const tags = tagP.el;
 
     const delBtn = existing ? h('button',{class:'btn danger',type:'button',text:'Delete',onclick:async()=>{
       if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
@@ -833,9 +912,9 @@ function openCardEditor(opts){
       const t = title.value.trim();
       if(!t){ title.classList.add('bad'); title.focus(); return; }
       const sectionId = secSel.value;
-      addTag(newInput.value);
+      tagP.flush();
       const data = { sectionId, title:t, body:body.value.trim().slice(0,20000), url:url.value.trim(),
-        tags: [...tagSel].map(k=>tagLabels.get(k)).sort(cmp).slice(0,20), status, fav };
+        tags: tagP.value(), status, fav: favP.ids().length>0, favIn: favP.ids(), favColor: favP.color() };
       closeSheet();
       if(existing) await Model.saveCardFull({...existing, ...data});
       else await Model.addCard(data);
@@ -1045,6 +1124,17 @@ function scheduleRender(){
 }
 const ready = () => COLLS.every(c=>S.got[c]);
 
+/* one-time: a second favourites board, “Clin Fav”, next to the built-in “Fav” (not recreated if you delete it) */
+function ensureClinFav(){
+  if(!ready() || !S.store) return;
+  try{
+    const done = localStorage.getItem('dm.clinfav')==='1';
+    if(S.boards.has('clinfav')){ if(!done) localStorage.setItem('dm.clinfav','1'); return; }
+    if(done || S.clinFavCreating) return;
+    S.clinFavCreating = true; localStorage.setItem('dm.clinfav','1');
+    const t = now(); run(S.store.set('boards','clinfav',{name:'Clin Fav',kind:'favs',createdAt:t,updatedAt:t}));
+  }catch(e){}
+}
 function ensureMainBoard(){
   if(!ready() || S.boards.size || S.mainCreating || !S.store) return;
   S.mainCreating = true;
@@ -1054,11 +1144,12 @@ function ensureMainBoard(){
 
 function render(){
   ensureMainBoard();
+  ensureClinFav();
   const b = curBoard();
   const searching = !!S.q;
   const listMode = searching && S.listView;
   const isFolders = !!b && b.kind==='folders';
-  const isFav = !!b && b.kind==='favourites';
+  const isFav = isFavKind(b);
   const groups = searching && ready() ? searchAll() : null;
   const tagList = tagsFor();
   if(S.tag && !tagList.some(t=>t.key===S.tag)) S.tag = null;   // that tag no longer exists anywhere
@@ -1072,7 +1163,7 @@ function render(){
   favsEl.hidden = listMode || !isFav;
   resultsEl.hidden = !listMode;
   if(listMode) renderResults();
-  else if(isFav) renderFavs();
+  else if(isFav) renderFavs(b);
   else if(isFolders) renderFolders(b);
   else renderBoard(b);
   renderSearchBar(b, groups);
@@ -1104,7 +1195,7 @@ function renderSearchBar(b, groups){
   if(!groups){ bar.append(h('span',{text:'Searching…'})); return; }
   let here=0, other=0, otherBoards=0, realTotal=0, realBoards=0;
   groups.forEach((a,bid)=>{ realTotal+=a.length; realBoards++; if(b && bid===b.id) here=a.length; else { other+=a.length; otherBoards++; } });
-  if(b && b.kind==='favourites') here = favMatchCount();
+  if(isFavKind(b)) here = favMatchCount(b.id);
   const listMode = S.listView;
   let text;
   if(listMode){ text = realTotal+' result'+(realTotal===1?'':'s')+' across '+realBoards+' board'+(realBoards===1?'':'s'); }
@@ -1135,10 +1226,10 @@ function applyFlash(){
 
 function renderChrome(b, groups){
   const isFolders = !!b && b.kind==='folders';
-  const isFav = !!b && b.kind==='favourites';
+  const isFav = isFavKind(b);
   let stats = '';
   if(ready() && b){
-    if(isFav){ const n = Model.favCards().length + Model.favBoards().length; stats = n+(n===1?' favourite':' favourites'); }
+    if(isFav){ const n = Model.favCards(b.id).length + Model.favBoards(b.id).length; stats = n+(n===1?' favourite':' favourites'); }
     else if(isFolders) stats = Model.foldersOf(b.id).length+' folders · '+Model.contentsOf(b.id).length+' items';
     else { const ss = Model.sectionsOf(b.id); stats = ss.length+' sections · '+ss.reduce((n,s)=>n+Model.cardsIn(s.id).length,0)+' cards'; }
   }
@@ -1146,10 +1237,16 @@ function renderChrome(b, groups){
   const tc = (S.tag && !S.q && ready()) ? tagCounts() : null;
   const badge = (n, what)=> n ? h('span',{class:'n',title:n+' '+what,text:String(n)}) : null;
   const tabs = $('#tabs'); tabs.replaceChildren();
-  const favN = groups ? favMatchCount() : (tc ? tc.fav : 0);
-  tabs.append(h('div',{class:'tab fav','aria-selected':String(isFav)},
-    h('button',{class:'tab-main',role:'tab','aria-selected':String(isFav),onclick:()=>selectBoard('fav')}, ic(isFav?'starFill':'star',14), 'Fav', badge(favN, groups?'matches':'cards with this tag'))));
+  const favTab = x=>{
+    const active = !!b && b.id===x.id;
+    const n = groups ? favMatchCount(x.id) : (tc ? favTagCount(x.id) : 0);
+    return h('div',{class:'tab fav','aria-selected':String(active)},
+      h('button',{class:'tab-main',role:'tab','aria-selected':String(active),onclick:()=>selectBoard(x.id)}, ic(active?'starFill':'star',14), x.name||'Fav', badge(n, groups?'matches':'with this tag')),
+      (active && x.id!==FAV_ID) ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:x.id})}, ic('edit',13)) : null);
+  };
+  tabs.append(favTab(FAV_BOARD));
   Model.boardsSorted().forEach(x=>{
+    if(x.kind==='favs'){ tabs.append(favTab(x)); return; }
     const active = b && x.id===b.id;
     const n = groups ? (groups.get(x.id)||[]).length : (tc ? (tc.per.get(x.id)||0) : 0);
     tabs.append(h('div',{class:'tab','aria-selected':String(!!active)},
@@ -1166,15 +1263,43 @@ function renderChrome(b, groups){
 /* ---------- free-form board ---------- */
 /* ---------- tag filter (one tag at a time; tap again to clear) ---------- */
 const tagKey = t => String(t||'').trim().toLowerCase();
+/* every tag has its own colour: Personal = light yellow, Clinic = light blue, the rest get a stable pastel */
+const TAG_FIXED = {personal:'#e6b800', clinic:'#3b82f6'};          // base hues: Personal = yellow, Clinic = blue (shown as a very light tint)
+const TAG_PALETTE = ['#d4508f','#2fa66a','#7a5ad8','#e0883a','#14a38b','#b44fb4','#8a9a2f','#d85a5a','#9b6bd9','#5f9a54','#e0644a','#b8935a'];
+const tagHash = k => { let n = 0; for(const ch of k) n = (n*31 + ch.charCodeAt(0)) >>> 0; return n; };
+let _tagMap = null, _tagSrc = [null,null];
+/* each tag gets a free hue: the one its name hashes to, or the next unused one if that is taken */
+function tagColorMap(){
+  if(_tagMap && _tagSrc[0]===S.cards && _tagSrc[1]===S.boards) return _tagMap;
+  const keys = [...knownTagMap().keys()].sort(), used = new Set(), map = new Map();
+  keys.forEach(k=>{
+    if(TAG_FIXED[k]){ map.set(k,TAG_FIXED[k]); return; }
+    let i = tagHash(k) % TAG_PALETTE.length, g = 0;
+    while(used.has(i) && g++ < TAG_PALETTE.length) i = (i+1) % TAG_PALETTE.length;
+    used.add(i); map.set(k,TAG_PALETTE[i]);
+  });
+  _tagMap = map; _tagSrc = [S.cards, S.boards]; return map;
+}
+function tagColors(label){
+  const k = tagKey(label); if(TAG_FIXED[k]) return TAG_FIXED[k];
+  const map = tagColorMap(); if(map.has(k)) return map.get(k);
+  const usedIdx = new Set([...map.values()].map(v=>TAG_PALETTE.indexOf(v)));      // a tag still being typed
+  let i = tagHash(k) % TAG_PALETTE.length, g = 0;
+  while(usedIdx.has(i) && g++ < TAG_PALETTE.length) i = (i+1) % TAG_PALETTE.length;
+  return TAG_PALETTE[i];
+}
+/* soft tint of the hue (like the original tags) with neutral text, so tags never overpower the card */
+const tagStyle = label => { const c = tagColors(label); return '--tg-bg:color-mix(in srgb,'+c+' 17%,#fff);--tg-bg2:color-mix(in srgb,'+c+' 30%,#fff);--tg-base:'+c; };
 const hasTag = (c,key) => (c.tags||[]).some(t=>tagKey(t)===key);
 function tagsFor(){
   if(!ready()) return [];
   const m = new Map();
-  S.cards.forEach(c=>{
-    if(!S.sections.has(c.sectionId)) return;
+  const count = x=>{
     const seen = new Set();
-    (c.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=m.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; m.set(k,e); });
-  });
+    (x.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=m.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; m.set(k,e); });
+  };
+  S.cards.forEach(c=>{ if(S.sections.has(c.sectionId)) count(c); });
+  S.boards.forEach(b=>{ if(b.kind!=='favs') count(b); });          // boards share the same tag list
   return [...m.values()].sort((a,b)=>cmp(a.label,b.label));
 }
 function renderTagSelect(tags){
@@ -1187,14 +1312,16 @@ function renderTagSelect(tags){
   sel.classList.toggle('on', !!S.tag);
 }
 function tagCounts(){
-  const per = new Map(); let fav = 0;
-  S.cards.forEach(c=>{ const sec = S.sections.get(c.sectionId); if(!sec || !hasTag(c,S.tag)) return; const bid = boardOf(sec); per.set(bid,(per.get(bid)||0)+1); if(c.fav===true) fav++; });
-  return {per, fav};
+  const per = new Map();
+  S.cards.forEach(c=>{ const sec = S.sections.get(c.sectionId); if(!sec || !hasTag(c,S.tag)) return; const bid = boardOf(sec); per.set(bid,(per.get(bid)||0)+1); });
+  return {per};
 }
+function favTagCount(id){ return Model.favCards(id).filter(c=>hasTag(c,S.tag)).length + Model.favBoards(id).filter(bd=>hasTag(bd,S.tag)).length; }
 
-function favMatchCount(){
+function favMatchCount(id){
   if(!S.q) return 0;
-  return Model.favCards().filter(cardHit).length + Model.favBoards().filter(bd=>hit(bd.name)).length;
+  id = id || FAV_ID;
+  return Model.favCards(id).filter(cardHit).length + Model.favBoards(id).filter(bd=>hit(bd.name+' '+(bd.tags||[]).join(' '))).length;
 }
 
 /* ---------- Favourites board: cards from every board; tap = open the link in a new tab ---------- */
@@ -1204,7 +1331,8 @@ function favMatchCount(){
 const TILE_COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
 function favColorMap(cards){
   const use = new Map(TILE_COLORS.map(k=>[k,0])), out = new Map();
-  [...cards].sort((a,b)=>String(a.id).localeCompare(String(b.id))).forEach(c=>{
+  cards.forEach(c=>{ if(TILE_COLORS.includes(c.favColor)){ out.set(c.id,c.favColor); use.set(c.favColor,use.get(c.favColor)+1); } });   // colours you picked
+  [...cards].filter(c=>!out.has(c.id)).sort((a,b)=>String(a.id).localeCompare(String(b.id))).forEach(c=>{
     let n = 0; for(const ch of String(c.id)) n = (n*31 + ch.charCodeAt(0)) >>> 0;
     const min = Math.min(...use.values());
     const cand = TILE_COLORS.filter(k=>use.get(k)===min), pool = cand.filter(k=>k!=='c7');
@@ -1214,40 +1342,42 @@ function favColorMap(cards){
   return out;
 }
 
-function renderFavs(){
+function renderFavs(b){
+  const fid = b ? b.id : FAV_ID;
   favsEl.replaceChildren();
   const wrap = h('div',{class:'favwrap'});
   favsEl.append(wrap);
   if(!ready()){ wrap.append(h('div',{class:'fempty',text:'Loading…'})); return; }
-  const allCards = Model.favCards(), allBoards = Model.favBoards();
+  const allCards = Model.favCards(fid), allBoards = Model.favBoards(fid);
   if(!allCards.length && !allBoards.length){
     wrap.append(h('div',{class:'fempty'},
       h('div',{class:'fav-big'}, ic('starFill',26)),
-      h('p',{text:'No favourites yet.'}),
-      h('p',{class:'hint',text:'Turn on “Favourite” in any card or board. Cards open their link in a new tab; boards open right here.'})));
+      h('p',{text:'Nothing on '+(b&&b.name||'Fav')+' yet.'}),
+      h('p',{class:'hint',text:'Turn on “Favourite” in a card or board and choose “'+(b&&b.name||'Fav')+'”. Cards open their link in a new tab; boards open right here.'})));
     return;
   }
-  const colors = favColorMap([...allBoards, ...allCards]);      // over ALL favourites so colours don't shift when you filter
-  let boards = S.tag ? [] : allBoards;                           // boards have no tags
+  const colors = favColorMap([...allBoards, ...allCards]);      // over ALL items on this board so colours don't shift when you filter
+  let boards = S.tag ? allBoards.filter(bd=>hasTag(bd,S.tag)) : allBoards;
   let cards = S.tag ? allCards.filter(c=>hasTag(c,S.tag)) : allCards;
-  if(S.q){ boards = boards.filter(bd=>hit(bd.name)); cards = cards.filter(cardHit); }
+  if(S.q){ boards = boards.filter(bd=>hit(bd.name+' '+(bd.tags||[]).join(' '))); cards = cards.filter(cardHit); }
   if(!boards.length && !cards.length){
     wrap.append(h('div',{class:'fempty'}, h('p',{text: S.q ? 'No favourites match “'+S.q+'”.' : 'No favourites with this tag.'})));
     return;
   }
   const initialOf = t => (Array.from(String(t||'').trim())[0]||'').toUpperCase();
-  const tile = ({id,title,top,sub,st,main,match,tip})=>{
+  const tile = ({id,title,top,sub,st,main,match,tip,edit})=>{
     const longest = Math.max(0, ...String(title||'').split(/\s+/).map(w=>w.length));
     main.append(sub ? h('div',{class:'fav-sec',text:sub}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, tx(title||'(untitled)')));
     return h('div',{class:'fav-tile'+(match?' match':''),'data-id':id,'data-st':st,'data-initial':initialOf(title),style:'--tc:var(--'+(colors.get(id)||'c0')+')'}, main,
-      h('div',{class:'fav-board',title:tip||top,text:top}));
+      h('div',{class:'fav-board',title:tip||top,text:top}),
+      h('div',{class:'fav-actions'}, h('button',{class:'icon-btn','aria-label':'Edit '+(title||'favourite'),title:'Edit',onclick:edit}, ic('edit',15))));
   };
   const boardTile = bd=>{
     const isF = bd.kind==='folders';
     const n = isF ? Model.foldersOf(bd.id).length : Model.sectionsOf(bd.id).length;
     const sub = n+(isF?(n===1?' folder':' folders'):(n===1?' section':' sections'));
     const main = h('button',{class:'fav-main',type:'button','aria-label':'Open board '+(bd.name||''),onclick:()=>selectBoard(bd.id)});
-    return tile({id:bd.id,title:bd.name,top:isF?'Folders':'Board',sub,st:'live',main,match:S.q&&hit(bd.name),tip:'Open this board'});
+    return tile({id:bd.id,title:bd.name,top:isF?'Folders':'Board',sub,st:'live',main,match:S.q&&hit(bd.name+' '+(bd.tags||[]).join(' ')),tip:'Open this board',edit:()=>openBoardEditor({id:bd.id})});
   };
   const cardTile = c=>{
     const sec = S.sections.get(c.sectionId), brd = sec && S.boards.get(boardOf(sec));
@@ -1256,7 +1386,7 @@ function renderFavs(){
       ? h('a',{class:'fav-main',href,target:'_blank',rel:'noopener noreferrer','aria-label':(c.title||'Open')+' (opens in a new tab)'})
       : h('button',{class:'fav-main',type:'button','aria-label':'Show '+(c.title||'card')+' on its board',
           onclick:()=>{ if(cardStatus(c)==='closed') S.closedOpen.add(c.sectionId); S.flash = {kind:'card',id:c.id}; selectBoard(boardOf(sec)); }});
-    return tile({id:c.id,title:c.title,top:(brd&&brd.name)||'',sub:(sec&&sec.name)||'',st,main,match:S.q&&cardHit(c),tip:[brd&&brd.name, sec&&sec.name].filter(Boolean).join(' · ')});
+    return tile({id:c.id,title:c.title,top:(brd&&brd.name)||'',sub:(sec&&sec.name)||'',st,main,match:S.q&&cardHit(c),tip:[brd&&brd.name, sec&&sec.name].filter(Boolean).join(' · '),edit:()=>openCardEditor({id:c.id})});
   };
   const live = cards.filter(c=>cardStatus(c)!=='closed'), closed = cards.filter(c=>cardStatus(c)==='closed');
   if(boards.length || live.length){ const grid = h('div',{class:'favgrid'}); boards.forEach(bd=>grid.append(boardTile(bd))); live.forEach(c=>grid.append(cardTile(c))); wrap.append(grid); }
@@ -1290,12 +1420,48 @@ function cardEl(c, sec){
         h('button',{class:'sdot',type:'button','data-s':st,title:STATUS[st].label+' — tap to change','aria-label':'Status: '+STATUS[st].label+'. Tap to change.',
           onclick:e=>{ e.stopPropagation(); cycleStatus(c); }})),
       c.url ? h('div',{class:'c-meta'}, href ? h('a',{href,target:'_blank',rel:'noopener noreferrer',title:c.url}, linkText(c.url), ic('external',11)) : linkText(c.url)) : null,
-      (c.tags&&c.tags.length) ? h('div',{class:'tags'}, c.tags.map(t=>h('span',{class:'tag'}, tx(t)))) : null
+      (c.tags&&c.tags.length) ? h('div',{class:'tags'}, c.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, tx(t)))) : null
     ));
   return el;
 }
 
+/* Column layout for sections: measure every section at the final column width, then fill column 1 top to bottom
+   in A–Z order until it holds its fair share of the height, then column 2, and so on. No column is ever empty. */
+const LAYOUT = {els:[], w:0};
+function layoutSections(els){
+  LAYOUT.els = els;
+  const GAP = 16, MIN = 260;
+  const cs = getComputedStyle(plane);
+  LAYOUT.w = plane.clientWidth;
+  const W = plane.clientWidth - (parseFloat(cs.paddingLeft)||0) - (parseFloat(cs.paddingRight)||0);
+  const N = W>0 ? Math.max(1, Math.min(els.length, Math.floor((W+GAP)/(MIN+GAP)))) : 1;
+  const old = plane.querySelector(':scope > .cols'); if(old) old.remove();
+  const wrap = h('div',{class:'cols'});
+  const cols = Array.from({length:N}, ()=>h('div',{class:'col'}));
+  cols.forEach(c=>wrap.append(c));
+  plane.prepend(wrap);
+  els.forEach(e=>cols[0].append(e));                 // measure all in one column of the final width
+  if(W<=0 || N===1) return;
+  const hs = els.map(e=>e.offsetHeight);
+  const target = (hs.reduce((a,b)=>a+b,0) + GAP*(els.length-1)) / N;
+  cols.forEach(c=>c.replaceChildren());
+  let ci = 0, colH = 0;
+  els.forEach((e,i)=>{
+    const left = els.length - i;                       // sections still to place (including this one)
+    if(colH>0 && ci<N-1 && (colH + hs[i]/2 > target || left <= N-1-ci)){ ci++; colH = 0; }
+    cols[ci].append(e); colH += hs[i] + GAP;
+  });
+}
+const planeRO = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(()=>{
+  if(!LAYOUT.els.length || board.hidden) return;
+  const w = plane.clientWidth;
+  if(!w || Math.abs(w-LAYOUT.w) < 24) return;
+  requestAnimationFrame(()=>{ if(LAYOUT.els.length && !board.hidden) layoutSections(LAYOUT.els); });
+}) : null;
+if(planeRO) planeRO.observe(plane);
+
 function renderBoard(b){
+  LAYOUT.els = [];
   plane.replaceChildren();
   if(!ready()){ plane.append(h('div',{class:'empty'},h('p',{text:'Loading your map…'}))); return; }
   if(!b){
@@ -1313,7 +1479,7 @@ function renderBoard(b){
       h('button',{class:'btn primary',onclick:()=>openSectionEditor({})}, ic('plus',14),'Add first section')));
     return;
   }
-  const q = S.q; let rendered = 0;
+  const q = S.q; let rendered = 0; const secEls = [];
   secs.forEach(sec=>{
     const all = Model.cardsIn(sec.id);
     const tagged = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
@@ -1350,8 +1516,9 @@ function renderBoard(b){
         h('button',{class:'icon-btn','aria-label':'Add card with options',title:'Add card',onclick:()=>openCardEditor({sectionId:sec.id})}, ic('plus',16))),
       sec.description ? h('div',{class:'s-desc'}, tx(sec.description)) : null,
       list, quick);
-    plane.append(el);
+    secEls.push(el);
   });
+  if(secEls.length) layoutSections(secEls);
   if(q && !rendered){
     plane.append(h('div',{class:'empty'},  h('h2',{text:'No matches'}),
       h('p',{text:'Nothing on this board matches “'+q+'”. A number on another board’s tab means it has matches.'})));
@@ -1468,7 +1635,7 @@ function snippet(text){
 function searchAll(){
   const groups = new Map();
   const add = (bid,item)=>{ if(!groups.has(bid)) groups.set(bid,[]); groups.get(bid).push(item); };
-  S.boards.forEach(b=>{ if(hit(b.name)) add(b.id,{kind:'board',id:b.id,title:b.name}); });
+  S.boards.forEach(b=>{ if(b.kind!=='favs' && hit(b.name+' '+(b.tags||[]).join(' '))) add(b.id,{kind:'board',id:b.id,title:b.name}); });
   S.sections.forEach(s=>{
     const bid = boardOf(s); if(!S.boards.has(bid)) return;
     if(hit((s.name||'')+' '+(s.description||'')+' '+(s.url||''))) add(bid,{kind:'section',id:s.id,title:s.name,body:s.description,url:s.url});
@@ -1525,7 +1692,7 @@ function renderResults(){
           h('div',{class:'t'}, hl(it.title||'(untitled)')),
           it.sub ? h('div',{class:'s'}, it.sub) : null,
           it.body ? h('div',{class:'b'}, hl(snippet(it.body))) : null,
-          (it.tags&&it.tags.length) ? h('div',{class:'tags'}, it.tags.map(t=>h('span',{class:'tag'}, hl(t)))) : null,
+          (it.tags&&it.tags.length) ? h('div',{class:'tags'}, it.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, hl(t)))) : null,
           it.url ? h('div',{class:'c-meta'}, href ? h('a',{href,target:'_blank',rel:'noopener noreferrer',title:it.url}, linkText(it.url), ic('external',11)) : linkText(it.url)) : null)));
     }
     wrap.append(h('div',{class:'res-group'},
