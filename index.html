@@ -21,7 +21,7 @@
 -->
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <title>DataMap</title>
 <meta name="application-name" content="DataMap">
@@ -84,9 +84,9 @@ mark{background:var(--hl);color:inherit;border-radius:3px;padding:0 1px}
 /* views */
 main{flex:1;min-height:0;display:flex}
 #board,#folders,#favs,#results{flex:1;min-width:0;overflow:auto;-webkit-overflow-scrolling:touch}
-/* Sections lay themselves out: as many columns as fit the screen (min 260px each), packed top-to-bottom.
-   Each section's height is measured in JS and turned into a row-span, so shorter columns fill first. */
-#plane{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));grid-auto-rows:8px;column-gap:16px;align-items:start;padding:16px 16px 48px;min-height:100%}
+/* Sections stack tightly (only the normal 16px gap, no empty space) in as many columns as fit the screen
+   (min 260px each). Order is A–Z: down the first column, then the next column, and so on. */
+#plane{position:relative;display:block;column-width:260px;column-gap:16px;padding:16px 16px 48px;min-height:100%}
 .empty{position:absolute;left:50%;top:80px;transform:translateX(-50%);width:min(360px,calc(100vw - 40px));text-align:center;color:var(--muted);
   background:var(--panel);border:1px dashed var(--line);border-radius:14px;padding:22px}
 .empty h2{margin:0 0 6px;color:var(--ink);font-size:16px}
@@ -95,7 +95,7 @@ main{flex:1;min-height:0;display:flex}
 .flash{animation:flash 2s ease-out}
 
 /* sections */
-.section{position:relative;min-width:0;margin-bottom:16px;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.section{position:relative;min-width:0;width:100%;margin:0 0 16px;break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--sc);border-radius:11px;box-shadow:var(--shadow);display:flex;flex-direction:column}
 .s-head{display:flex;align-items:center;gap:4px;padding:6px 6px 6px 12px;background:color-mix(in srgb,var(--sc) 13%,var(--panel));border-radius:8px 8px 0 0}
 .s-title{flex:1;min-width:0;text-align:left;border:0;background:none;cursor:pointer;font-weight:650;font-size:14px;padding:3px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .s-count{font-size:11px;color:var(--muted);padding:0 2px}
@@ -114,7 +114,8 @@ main{flex:1;min-height:0;display:flex}
 .c-note{color:var(--faint,#8b93a4);display:inline-flex;margin-top:2px;flex:none}
 .sdot{--st:#2fa66a;position:relative;width:8px;height:8px;border-radius:50%;border:0;padding:0;margin:6px 1px 0 0;flex:none;background:var(--st);cursor:pointer}
 .sdot::after{content:"";position:absolute;inset:-10px}
-.sdot[data-s="active"]{--st:#2fa66a}
+.sdot[data-s="dev"]{--st:#e5484d}
+.sdot[data-s="live"]{--st:#2fa66a}
 .sdot[data-s="dormant"]{--st:#f0b429}
 .sdot[data-s="closed"]{--st:#a3abb9}
 .tab.fav .tab-main svg{color:#d99a1e}
@@ -269,6 +270,99 @@ main{flex:1;min-height:0;display:flex}
 #toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);
   padding:9px 14px;border-radius:10px;z-index:4000;display:flex;gap:12px;align-items:center;max-width:calc(100vw - 24px);box-shadow:var(--shadow)}
 #toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0}
+
+/* ---------- round 18: touch, top bar, tags, favourites ---------- */
+*{touch-action:pan-x pan-y}
+@supports(height:100dvh){html,body{height:100dvh}}
+@media (max-width:820px),(pointer:coarse){input,select,textarea{font-size:16px!important}}
+.search input{padding-right:36px}
+.search input::-webkit-search-cancel-button,.search input::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
+.sclear{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:50%;border:0;background:var(--line);color:var(--muted);display:grid;place-items:center;cursor:pointer;padding:0}
+.sclear:hover{background:var(--line2);color:var(--ink)}
+.search input:placeholder-shown ~ .sclear{display:none}
+#tabs{overflow-y:hidden;overscroll-behavior:contain;touch-action:pan-x}
+.tab{margin-bottom:0}
+.tab-main{min-height:40px}
+#actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tagsel:disabled{opacity:.55;cursor:default}
+.sw-row{justify-content:flex-start;gap:12px}
+.sw-txt{flex:0 0 auto}
+.tpicks{display:flex;flex-wrap:wrap;gap:8px}
+.tpick{display:inline-flex;align-items:center;min-height:38px;padding:0 14px;border-radius:999px;border:1px solid var(--line2);background:var(--card);color:var(--ink);font-weight:550;font-size:14px;cursor:pointer}
+.tpick[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,var(--card));font-weight:700}
+.tnone{color:var(--muted);font-size:13px}
+.tagpick .newtag{margin-top:10px}
+.overlay{touch-action:none;-webkit-user-select:none;user-select:none}
+.sheet{touch-action:pan-y;-webkit-user-select:text;user-select:text}
+.fav-board{right:18px}
+.seg button{flex:1 1 auto}
+@media (min-width:721px){
+  #top{display:grid;grid-template-columns:250px minmax(0,1fr) 190px 220px;column-gap:12px;align-items:center}
+  .brand{min-width:0;overflow:hidden}
+  .brand h1{flex:none}
+  #stats{overflow:hidden;text-overflow:ellipsis}
+  #actions{display:contents}
+  #actions .tagsel{grid-column:3;width:100%;max-width:none}
+  .act-btns{grid-column:4;display:flex;gap:6px;justify-content:flex-end}
+}
+.act-btns{display:flex;gap:6px}
+@media (max-width:720px){
+  #top{gap:8px;padding:8px 12px 6px;padding-top:calc(8px + env(safe-area-inset-top,0px))}
+  .brand{flex:1 1 100%}
+  .search{order:2;flex:1 1 100%;min-width:0}
+  #actions{order:3;flex:1 1 100%;flex-wrap:nowrap;gap:8px}
+  #actions .tagsel{flex:1 1 0;min-width:0;max-width:none}
+  .act-btns{flex:none}
+  #actions .btn{flex:none}
+}
+@media (pointer:coarse){
+  .btn{min-height:44px}
+  .btn.sm{min-height:38px}
+  .icon-btn{width:40px;height:40px}
+  .tab-main{min-height:44px}
+  .tagsel{min-height:44px}
+  .closed-toggle{min-height:40px}
+  .sclear{width:32px;height:32px}
+  .seg button{min-height:44px}
+  .switch{transform:scale(1.05)}
+  .quick{min-height:44px}
+  .frow .acts .icon-btn{width:38px;height:38px}
+}
+
+/* ---------- round 18b: phone audit fixes ---------- */
+
+.s-count,.tag,.closed-toggle .cn{font-size:12px}
+.fav-board{font-size:11px}
+@media (pointer:coarse){
+  .search input{min-height:44px}
+  .s-title{min-height:40px}
+  .sdot::after{inset:-14px}
+  .f select,.f input[type=text],.f input[type=url],.f textarea{min-height:44px}
+  .switch::after{content:"";position:absolute;inset:-7px -4px}
+  .tpick{min-height:42px}
+  .btn.sm{min-height:40px}
+}
+
+/* ---------- round 19: the card editor fits the screen ---------- */
+.sheet.fit{display:flex;flex-direction:column;padding-top:4px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));max-height:calc(100vh - 14px)}
+@supports(height:100dvh){.sheet.fit{max-height:calc(100dvh - 14px)}}
+@media (min-width:721px){.sheet.fit{max-height:94vh;padding-top:16px;padding-bottom:16px}}
+.sheet.fit>*{flex:0 0 auto}
+.sheet.fit h3{margin:2px 0 8px}
+.sheet.fit .f{margin-bottom:8px}
+.sheet.fit .f>label{margin-bottom:3px}
+.sheet.fit>.f.grow{display:flex;flex-direction:column;flex:1 1 112px;min-height:58px}
+.sheet.fit>.f.grow textarea{flex:1 1 auto;min-height:36px;height:auto;resize:none}
+.sheet.fit .f input[type=text],.sheet.fit .f input[type=url],.sheet.fit .f select{min-height:42px;padding-top:8px;padding-bottom:8px}
+.sheet.fit .foot{margin-top:6px}
+.sheet.fit .grab{margin:4px auto 8px}
+.stseg{display:flex;flex-wrap:wrap;gap:4px}
+.stseg button{flex:1 1 auto;min-width:0;min-height:40px;padding:0 8px;gap:5px;font-size:13px;white-space:nowrap;justify-content:center}
+.stseg .sdot.static{width:8px;height:8px}
+.sheet.fit .tpicks{gap:6px}
+.sheet.fit .tpick{min-height:34px;padding:0 12px;font-size:13.5px}
+.sheet.fit .tagpick .newtag{margin-top:6px}
+.sheet.fit .sw-row{margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -316,7 +410,7 @@ const firebaseConfig = {
    Every document below is a Firestore document in a top-level collection
    of the same name. Access is controlled by firestore.rules.
 
-   boards/<id>     { name, kind:'board'|'folders', order, createdAt, updatedAt }
+   boards/<id>     { name, kind:'board'|'folders', fav (also shown on Fav), order, createdAt, updatedAt }
                    kind 'board'   = free-form board of sections + cards
                    kind 'folders' = folder tree
 
@@ -326,8 +420,9 @@ const firebaseConfig = {
                    Legacy sections without boardId belong to board 'main'.
 
    cards/<id>      { sectionId, title, body (the card's note), url, tags[],
-                     status: 'active'|'dormant'|'closed'  (older docs saved
-                     'developing' / 'inactive'; they are read as dormant / closed),
+                     status: 'dev'|'live'|'dormant'|'closed'  (default: dormant;
+                     older docs: 'active' reads as live, 'developing' as dormant,
+                     'inactive' as closed),
                      fav: true|false  (true = also shown on the Favourites board), ... }
 
    Favourites is NOT stored: it is a built-in first tab that lists every card
@@ -349,9 +444,9 @@ const firebaseConfig = {
 const COLORS = ['c0','c1','c2','c3','c4','c5','c6','c7'];
 const KINDS = {board:'Free-form board', folders:'Folder structure'};
 const COLLS = ['boards','sections','cards','folders','contents'];
-const STATUS = {active:{label:'Active'}, dormant:{label:'Dormant'}, closed:{label:'Closed'}};
-const STATUS_ORDER = ['active','dormant','closed'];
-const cardStatus = c => { const v = c && c.status; if(v==='developing') return 'dormant'; if(v==='inactive') return 'closed'; return STATUS[v] ? v : 'active'; };
+const STATUS = {dev:{label:'Developing'}, live:{label:'Live'}, dormant:{label:'Dormant'}, closed:{label:'Closed'}};
+const STATUS_ORDER = ['dev','live','dormant','closed'];   // sort order: Developing first
+const cardStatus = c => { const v = c && c.status; if(v==='active') return 'live'; if(v==='developing') return 'dormant'; if(v==='inactive') return 'closed'; return STATUS[v] ? v : 'dormant'; };
 const FAV_BOARD = {id:'fav', kind:'favourites', name:'Fav'};
 
 const S = { boards:new Map(), sections:new Map(), cards:new Map(), folders:new Map(), contents:new Map(),
@@ -466,9 +561,10 @@ const Model = {
   },
 
   /* cards */
+  favBoards(){ return [...S.boards.values()].filter(b=>b.fav===true).sort(byName); },
   favCards(){ return [...S.cards.values()].filter(c=>c.fav===true && S.sections.has(c.sectionId)).sort(byStatusTitle); },
   cardsIn(sectionId){ return [...S.cards.values()].filter(c=>c.sectionId===sectionId).sort(byStatusTitle); },
-  addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'active',...d,createdAt:t,updatedAt:t})).then(()=>id); },
+  addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'dormant',...d,createdAt:t,updatedAt:t})).then(()=>id); },
   updateCard(id,p){ return run(S.store.update('cards',id,{...p,updatedAt:now()})); },
   saveCardFull(card){ return run(S.store.set('cards',card.id,{...card,updatedAt:now()})); },
   deleteCard(id){ return run(S.store.remove('cards',id)); },
@@ -552,7 +648,8 @@ const ICONS = {
   note:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/>',
   star:'<path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
   starFill:'<path fill="currentColor" d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
-  tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V4h9l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor"/>'
+  tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V4h9l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor"/>',
+  close:'<path d="M6 6l12 12M18 6L6 18"/>'
 };
 function ic(name,size=16){
   const s = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -587,6 +684,7 @@ function linkText(u, hlText){
 }
 function hostOf(u){ try{ return new URL(safeHref(u)).host.replace(/^www\./,''); }catch(e){ return u; } }
 const tx = s => S.q ? hl(s) : s;
+const cardHit = c => hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
 const secColor = sec => 'var(--'+((sec&&sec.color)||'c0')+')';
 
 let toastTimer;
@@ -603,7 +701,7 @@ function curBoard(){
 }
 function clearSearch(){ S.q=''; S.listView=false; S.matchIdx=-1; if(qInput) qInput.value=''; }
 function selectBoard(id){
-  S.boardId = id; S.tag = null;
+  S.boardId = id; S.resetScroll = true;   // the tag filter is universal: it stays when you switch boards
   render();
 }
 
@@ -616,7 +714,10 @@ function openSheet(build){
   const nativeAppend = sheet.append.bind(sheet);
   sheet.append = (...k)=>nativeAppend(...k.filter(x=>x!=null&&x!==false));
   ov.append(sheet);
-  ov.addEventListener('pointerdown', e=>{ if(e.target===ov) closeSheet(); });
+  const openedAt = Date.now();
+  // close on the tap's CLICK (while the overlay still catches it) so nothing underneath is selected or opened
+  ov.addEventListener('click', e=>{ if(e.target===ov && Date.now()-openedAt>150){ e.preventDefault(); e.stopPropagation(); closeSheet(); } });
+  ov.addEventListener('pointerdown', e=>{ if(e.target===ov) e.preventDefault(); });
   document.body.append(ov);
   sheetClose = ()=>{ ov.remove(); sheetClose=null; };
   build(sheet);
@@ -631,6 +732,9 @@ function openBoardEditor(opts){
   const d = existing ? {...existing} : {name:'',kind:'board'};
   openSheet(sheet=>{
     const name = h('input',{type:'text',maxlength:'60',placeholder:'e.g. Clinic apps, Personal, Documents'}); name.value = d.name||'';
+    let fav = d.fav === true;
+    const favSw = h('button',{type:'button',class:'switch',role:'switch','aria-checked':String(fav),'aria-label':'Favourite',onclick:()=>{ fav=!fav; favSw.setAttribute('aria-checked',String(fav)); }}, h('span',{class:'knob'}));
+    const favRow = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), favSw);
     let kindField = null;
     if(!existing){
       const seg = h('div',{class:'seg'});
@@ -654,12 +758,12 @@ function openBoardEditor(opts){
       const n = name.value.trim();
       if(!n){ name.classList.add('bad'); name.focus(); return; }
       closeSheet();
-      if(existing) await Model.updateBoard(existing.id,{name:n});
-      else { const id = await Model.addBoard({name:n,kind:d.kind}); if(id){ clearSearch(); selectBoard(id); } }
+      if(existing) await Model.updateBoard(existing.id,{name:n,fav});
+      else { const id = await Model.addBoard({name:n,kind:d.kind,fav}); if(id){ clearSearch(); selectBoard(id); } }
     }
     sheet.append(
       h('h3',{text:existing?'Edit board':'New board'}),
-      field('Name', name), kindField, delArea,
+      field('Name', name), kindField, favRow, delArea,
       h('div',{class:'foot'}, h('span',{class:'spacer'}),
         h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
         h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
@@ -679,7 +783,7 @@ function openCardEditor(opts){
   if(!bid) return;
   const secs = Model.sectionsSorted(bid);
   if(!secs.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
-  const d = existing ? {...existing} : {sectionId:opts.sectionId||secs[0].id, title:'', body:'', url:'', tags:[], status:'active'};
+  const d = existing ? {...existing} : {sectionId:opts.sectionId||secs[0].id, title:'', body:'', url:'', tags:[], status:'dormant'};
   let status = cardStatus(d);
   let fav = d.fav === true;
   if(!secs.some(s=>s.id===d.sectionId)) d.sectionId = secs[0].id;
@@ -688,39 +792,37 @@ function openCardEditor(opts){
     const secSel = h('select');
     secs.forEach(s=>{ const o=h('option',{value:s.id,text:s.name||'Untitled'}); if(s.id===d.sectionId) o.selected=true; secSel.append(o); });
     const title = h('input',{type:'text',maxlength:'200',placeholder:'e.g. Patient consent forms'}); title.value = d.title||'';
-    const body = h('textarea',{rows:'6',placeholder:'Add a note (only visible here, not on the board)'}); body.value = d.body||'';
-    const stSeg = h('div',{class:'seg'});
+    const body = h('textarea',{rows:'3',placeholder:'Add a note (only visible here, not on the board)'}); body.value = d.body||'';
+    const stSeg = h('div',{class:'seg stseg'});
     STATUS_ORDER.forEach(k=>{ stSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{ status=k; [...stSeg.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }}, h('span',{class:'sdot static','data-s':k}), STATUS[k].label)); });
     const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:'Optional link to open it'}); url.value = d.url||'';
     const favSw = h('button',{type:'button',class:'switch',role:'switch','aria-checked':String(fav),'aria-label':'Favourite',onclick:()=>{ fav=!fav; favSw.setAttribute('aria-checked',String(fav)); }}, h('span',{class:'knob'}));
     const favRow = h('div',{class:'f sw-row'}, h('div',{class:'sw-txt'}, h('div',{class:'sw-t'}, ic('starFill',14), 'Favourite')), favSw);
-    /* tags: chips + dropdown of existing tags + "New tag…" */
-    let tagsSel = [];
-    (d.tags||[]).forEach(t=>{ t = String(t).trim(); if(t && !tagsSel.some(x=>tagKey(x)===tagKey(t))) tagsSel.push(t); });
-    const knownTags = ()=>{ const m = new Map(); S.cards.forEach(c=>(c.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !m.has(k)) m.set(k,String(t).trim()); })); return [...m.values()].sort(cmp); };
-    const chips = h('div',{class:'etags'});
-    const picker = h('select',{'aria-label':'Add a tag'});
+    /* tags: every known tag is a chip; tap to select / unselect (like Status). New tags are added below. */
+    const tagSel = new Set(), tagLabels = new Map();
+    S.cards.forEach(c=>(c.tags||[]).forEach(t=>{ const k=tagKey(t); if(k && !tagLabels.has(k)) tagLabels.set(k,String(t).trim()); }));
+    (d.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k) return; if(!tagLabels.has(k)) tagLabels.set(k,String(t).trim()); tagSel.add(k); });
+    const tagsBox = h('div',{class:'tpicks'});
     const newInput = h('input',{type:'text',maxlength:'40',placeholder:'New tag (comma for several)','aria-label':'New tag'});
-    const newRow = h('div',{class:'newtag'}, newInput, h('button',{type:'button',class:'btn sm',text:'Add',onclick:()=>{ addTag(newInput.value); newInput.value=''; newInput.focus(); }}));
     function paintTags(){
-      chips.replaceChildren(...tagsSel.map(t=>h('span',{class:'etag'}, t, h('button',{type:'button','aria-label':'Remove tag '+t,onclick:()=>{ tagsSel = tagsSel.filter(x=>x!==t); paintTags(); }}, '×'))));
-      const free = knownTags().filter(t=>!tagsSel.some(x=>tagKey(x)===tagKey(t)));
-      picker.replaceChildren(h('option',{value:'',text:free.length?'Add an existing tag…':'No other tags yet'}), ...free.map(t=>h('option',{value:t,text:t})), h('option',{value:'__new',text:'＋ New tag…'}));
-      picker.value = '';
+      const items = [...tagLabels.entries()].sort((a,b)=>cmp(a[1],b[1]));
+      tagsBox.replaceChildren(...(items.length
+        ? items.map(([k,label])=>h('button',{type:'button',class:'tpick','aria-pressed':String(tagSel.has(k)),onclick:()=>{ if(tagSel.has(k)) tagSel.delete(k); else tagSel.add(k); paintTags(); }}, label))
+        : [h('span',{class:'tnone',text:'No tags yet — add one below.'})]));
     }
     function addTag(raw){
       String(raw||'').split(',').forEach(t=>{
-        t = t.trim().slice(0,40); if(!t || tagsSel.length>=20 || tagsSel.some(x=>tagKey(x)===tagKey(t))) return;
-        const known = knownTags().find(x=>tagKey(x)===tagKey(t));
-        tagsSel.push(known || t);
+        t = t.trim().slice(0,40); const k = tagKey(t);
+        if(!k || (!tagSel.has(k) && tagSel.size>=20)) return;
+        if(!tagLabels.has(k)) tagLabels.set(k,t);
+        tagSel.add(k);
       });
       paintTags();
     }
-    picker.addEventListener('change',()=>{ const v = picker.value; if(v==='__new'){ newRow.hidden = false; picker.value=''; newInput.focus(); } else if(v) addTag(v); });
     newInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); addTag(newInput.value); newInput.value=''; } });
-    newRow.hidden = knownTags().length>0;
     paintTags();
-    const tags = h('div',{class:'tagpick'}, chips, picker, newRow);
+    const tags = h('div',{class:'tagpick'}, tagsBox,
+      h('div',{class:'newtag'}, newInput, h('button',{type:'button',class:'btn sm',text:'Add',onclick:()=>{ addTag(newInput.value); newInput.value=''; newInput.focus(); }})));
 
     const delBtn = existing ? h('button',{class:'btn danger',type:'button',text:'Delete',onclick:async()=>{
       if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
@@ -733,15 +835,17 @@ function openCardEditor(opts){
       const sectionId = secSel.value;
       addTag(newInput.value);
       const data = { sectionId, title:t, body:body.value.trim().slice(0,20000), url:url.value.trim(),
-        tags: tagsSel.slice(0,20), status, fav };
+        tags: [...tagSel].map(k=>tagLabels.get(k)).sort(cmp).slice(0,20), status, fav };
       closeSheet();
       if(existing) await Model.saveCardFull({...existing, ...data});
       else await Model.addCard(data);
     }
+    const noteField = field('Note', body); noteField.classList.add('grow');
+    sheet.classList.add('fit');
     sheet.append(
       h('h3',{text:existing?'Edit card':'New card'}),
       field('Stored in (section / app)', secSel),
-      field('Card text', title), field('Status', stSeg), favRow, field('Note', body), field('Link', url), field('Tags', tags),
+      field('Card text', title), field('Status', stSeg), favRow, noteField, field('Link', url), field('Tags', tags),
       h('div',{class:'foot'}, delBtn, h('span',{class:'spacer'}),
         h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
         h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
@@ -769,14 +873,14 @@ function openSectionEditor(opts){
       const others = Model.sectionsSorted(b.id).filter(s=>s.id!==existing.id);
       const count = Model.cardsIn(existing.id).length;
       const mv = h('select');
-      others.forEach(s=>mv.append(h('option',{value:s.id,text:'Move them to “'+(s.name||'Untitled')+'”'})));
-      mv.append(h('option',{value:'',text:'Delete them too'}));
+      others.forEach(s=>mv.append(h('option',{value:s.id,text:s.name||'Untitled'})));
+      mv.append(h('option',{value:'',text:'Nowhere — delete the cards'}));
       if(!others.length) mv.value='';
       const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete section',onclick:async()=>{
         if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
         closeSheet(); await Model.deleteSection(existing.id, count?mv.value||null:null);
       }});
-      delArea = h('div',{class:'f'}, count? h('label',{text:'This section has '+count+' card'+(count===1?'':'s')}):null, count?mv:null, h('div',{style:'margin-top:8px'},delBtn));
+      delArea = h('div',{class:'f'}, count? h('label',{text:'This section has '+count+' card'+(count===1?'':'s')+'. Send them to:'}):null, count?mv:null, h('div',{style:'margin-top:8px'},delBtn));
     }
 
     async function save(){
@@ -956,8 +1060,12 @@ function render(){
   const isFolders = !!b && b.kind==='folders';
   const isFav = !!b && b.kind==='favourites';
   const groups = searching && ready() ? searchAll() : null;
-  const tagList = tagsFor(b);
-  if(S.tag && !tagList.some(t=>t.key===S.tag)) S.tag = null;   // that tag no longer exists in this view
+  const tagList = tagsFor();
+  if(S.tag && !tagList.some(t=>t.key===S.tag)) S.tag = null;   // that tag no longer exists anywhere
+  // remember where each list was scrolled, so any edit / tap keeps your place (iPhone Safari resets it otherwise)
+  const scrollers = [board, foldersEl, favsEl, resultsEl];
+  const saved = S.resetScroll ? null : scrollers.map(e=>e.scrollTop);
+  S.resetScroll = false;
   renderChrome(b, groups);
   board.hidden = listMode || isFolders || isFav;
   foldersEl.hidden = listMode || !isFolders;
@@ -968,7 +1076,11 @@ function render(){
   else if(isFolders) renderFolders(b);
   else renderBoard(b);
   renderSearchBar(b, groups);
-  renderTagSelect(listMode ? [] : tagList);
+  renderTagSelect(tagList);
+  if(saved && !S.flash){
+    const restore = ()=>scrollers.forEach((e,i)=>{ if(!e.hidden && saved[i] && e.scrollTop!==saved[i]) e.scrollTop = saved[i]; });
+    restore(); requestAnimationFrame(restore);
+  }
   applyFlash();
 }
 
@@ -1022,24 +1134,26 @@ function applyFlash(){
 }
 
 function renderChrome(b, groups){
-  const isFolders = b && b.kind==='folders';
-  let stats = '';
+  const isFolders = !!b && b.kind==='folders';
   const isFav = !!b && b.kind==='favourites';
+  let stats = '';
   if(ready() && b){
-    if(isFav){ const n = Model.favCards().length; stats = n+(n===1?' favourite':' favourites'); }
+    if(isFav){ const n = Model.favCards().length + Model.favBoards().length; stats = n+(n===1?' favourite':' favourites'); }
     else if(isFolders) stats = Model.foldersOf(b.id).length+' folders · '+Model.contentsOf(b.id).length+' items';
     else { const ss = Model.sectionsOf(b.id); stats = ss.length+' sections · '+ss.reduce((n,s)=>n+Model.cardsIn(s.id).length,0)+' cards'; }
   }
   $('#stats').textContent = stats;
+  const tc = (S.tag && !S.q && ready()) ? tagCounts() : null;
+  const badge = (n, what)=> n ? h('span',{class:'n',title:n+' '+what,text:String(n)}) : null;
   const tabs = $('#tabs'); tabs.replaceChildren();
-  const favFound = groups ? favMatchCount() : 0;
+  const favN = groups ? favMatchCount() : (tc ? tc.fav : 0);
   tabs.append(h('div',{class:'tab fav','aria-selected':String(isFav)},
-    h('button',{class:'tab-main',role:'tab','aria-selected':String(isFav),onclick:()=>selectBoard('fav')}, ic(isFav?'starFill':'star',14), 'Fav', favFound ? h('span',{class:'n',title:favFound+' match'+(favFound===1?'':'es'),text:String(favFound)}) : null)));
+    h('button',{class:'tab-main',role:'tab','aria-selected':String(isFav),onclick:()=>selectBoard('fav')}, ic(isFav?'starFill':'star',14), 'Fav', badge(favN, groups?'matches':'cards with this tag'))));
   Model.boardsSorted().forEach(x=>{
     const active = b && x.id===b.id;
-    const found = groups && groups.get(x.id);
+    const n = groups ? (groups.get(x.id)||[]).length : (tc ? (tc.per.get(x.id)||0) : 0);
     tabs.append(h('div',{class:'tab','aria-selected':String(!!active)},
-      h('button',{class:'tab-main',role:'tab','aria-selected':String(!!active),onclick:()=>selectBoard(x.id)}, ic(x.kind==='folders'?'folder':'board',14), x.name||'Untitled', found ? h('span',{class:'n',title:found.length+' match'+(found.length===1?'':'es'),text:String(found.length)}) : null),
+      h('button',{class:'tab-main',role:'tab','aria-selected':String(!!active),onclick:()=>selectBoard(x.id)}, ic(x.kind==='folders'?'folder':'board',14), x.name||'Untitled', badge(n, groups?'matches':'cards with this tag')),
       active ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:x.id})}, ic('edit',13)) : null));
   });
   tabs.append(h('div',{class:'tab add'}, h('button',{class:'tab-main',onclick:()=>{ if(!S.store) return toast('Still loading…'); openBoardEditor({}); }}, ic('plus',14),'Board')));
@@ -1053,11 +1167,11 @@ function renderChrome(b, groups){
 /* ---------- tag filter (one tag at a time; tap again to clear) ---------- */
 const tagKey = t => String(t||'').trim().toLowerCase();
 const hasTag = (c,key) => (c.tags||[]).some(t=>tagKey(t)===key);
-function tagsFor(b){
-  if(!ready() || !b || b.kind==='folders') return [];
-  const cards = b.kind==='favourites' ? Model.favCards() : Model.sectionsOf(b.id).flatMap(sec=>Model.cardsIn(sec.id));
+function tagsFor(){
+  if(!ready()) return [];
   const m = new Map();
-  cards.forEach(c=>{
+  S.cards.forEach(c=>{
+    if(!S.sections.has(c.sectionId)) return;
     const seen = new Set();
     (c.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=m.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; m.set(k,e); });
   });
@@ -1065,16 +1179,22 @@ function tagsFor(b){
 }
 function renderTagSelect(tags){
   const sel = $('#tagSel'); if(!sel) return;
-  if(!tags.length){ sel.hidden = true; return; }
   sel.hidden = false;
+  if(!tags.length){ sel.replaceChildren(h('option',{value:'',text:'No tags yet'})); sel.disabled = true; sel.value = ''; sel.classList.remove('on'); return; }
+  sel.disabled = false;
   sel.replaceChildren(h('option',{value:'',text:'All tags'}), ...tags.map(t=>h('option',{value:t.key,text:t.label+' ('+t.n+')'})));
   sel.value = S.tag || '';
   sel.classList.toggle('on', !!S.tag);
 }
+function tagCounts(){
+  const per = new Map(); let fav = 0;
+  S.cards.forEach(c=>{ const sec = S.sections.get(c.sectionId); if(!sec || !hasTag(c,S.tag)) return; const bid = boardOf(sec); per.set(bid,(per.get(bid)||0)+1); if(c.fav===true) fav++; });
+  return {per, fav};
+}
 
 function favMatchCount(){
   if(!S.q) return 0;
-  return Model.favCards().filter(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '))).length;
+  return Model.favCards().filter(cardHit).length + Model.favBoards().filter(bd=>hit(bd.name)).length;
 }
 
 /* ---------- Favourites board: cards from every board; tap = open the link in a new tab ---------- */
@@ -1099,40 +1219,53 @@ function renderFavs(){
   const wrap = h('div',{class:'favwrap'});
   favsEl.append(wrap);
   if(!ready()){ wrap.append(h('div',{class:'fempty',text:'Loading…'})); return; }
-  const all = Model.favCards();
-  if(!all.length){
+  const allCards = Model.favCards(), allBoards = Model.favBoards();
+  if(!allCards.length && !allBoards.length){
     wrap.append(h('div',{class:'fempty'},
       h('div',{class:'fav-big'}, ic('starFill',26)),
       h('p',{text:'No favourites yet.'}),
-      h('p',{class:'hint',text:'Open any card and turn on “Favourite”. It will show up here, and tapping it opens its link in a new tab.'})));
+      h('p',{class:'hint',text:'Turn on “Favourite” in any card or board. Cards open their link in a new tab; boards open right here.'})));
     return;
   }
-  const list = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
-  if(!list.length){ wrap.append(h('div',{class:'fempty'}, h('p',{text:'No favourites with this tag.'}))); return; }
-  const colors = favColorMap(all);   // computed over ALL favourites so colours don't shift when you filter
-  const tile = c=>{
+  const colors = favColorMap([...allBoards, ...allCards]);      // over ALL favourites so colours don't shift when you filter
+  let boards = S.tag ? [] : allBoards;                           // boards have no tags
+  let cards = S.tag ? allCards.filter(c=>hasTag(c,S.tag)) : allCards;
+  if(S.q){ boards = boards.filter(bd=>hit(bd.name)); cards = cards.filter(cardHit); }
+  if(!boards.length && !cards.length){
+    wrap.append(h('div',{class:'fempty'}, h('p',{text: S.q ? 'No favourites match “'+S.q+'”.' : 'No favourites with this tag.'})));
+    return;
+  }
+  const initialOf = t => (Array.from(String(t||'').trim())[0]||'').toUpperCase();
+  const tile = ({id,title,top,sub,st,main,match,tip})=>{
+    const longest = Math.max(0, ...String(title||'').split(/\s+/).map(w=>w.length));
+    main.append(sub ? h('div',{class:'fav-sec',text:sub}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, tx(title||'(untitled)')));
+    return h('div',{class:'fav-tile'+(match?' match':''),'data-id':id,'data-st':st,'data-initial':initialOf(title),style:'--tc:var(--'+(colors.get(id)||'c0')+')'}, main,
+      h('div',{class:'fav-board',title:tip||top,text:top}));
+  };
+  const boardTile = bd=>{
+    const isF = bd.kind==='folders';
+    const n = isF ? Model.foldersOf(bd.id).length : Model.sectionsOf(bd.id).length;
+    const sub = n+(isF?(n===1?' folder':' folders'):(n===1?' section':' sections'));
+    const main = h('button',{class:'fav-main',type:'button','aria-label':'Open board '+(bd.name||''),onclick:()=>selectBoard(bd.id)});
+    return tile({id:bd.id,title:bd.name,top:isF?'Folders':'Board',sub,st:'live',main,match:S.q&&hit(bd.name),tip:'Open this board'});
+  };
+  const cardTile = c=>{
     const sec = S.sections.get(c.sectionId), brd = sec && S.boards.get(boardOf(sec));
     const st = cardStatus(c), href = safeHref(c.url);
-    const isMatch = S.q && hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
-    const longest = Math.max(0, ...String(c.title||'').split(/\s+/).map(w=>w.length));
-    const inner = [ sec ? h('div',{class:'fav-sec',text:sec.name||''}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, tx(c.title||'(untitled)')) ];
     const main = href
-      ? h('a',{class:'fav-main',href,target:'_blank',rel:'noopener noreferrer','aria-label':(c.title||'Open')+' (opens in a new tab)'}, inner)
-      : h('button',{class:'fav-main',type:'button',onclick:()=>openCardEditor({id:c.id})}, inner);
-    const initial = (Array.from(String(c.title||'').trim())[0]||'').toUpperCase();
-    return h('div',{class:'fav-tile'+(isMatch?' match':''),'data-id':c.id,'data-st':st,'data-initial':initial,style:'--tc:var(--'+(colors.get(c.id)||'c0')+')'}, main,
-      h('div',{class:'fav-board',title:[brd&&brd.name, sec&&sec.name].filter(Boolean).join(' · '),text:(brd&&brd.name)||''}),
-      h('div',{class:'fav-actions'},
-        h('button',{class:'icon-btn','aria-label':'Edit card',title:'Edit card',onclick:()=>openCardEditor({id:c.id})}, ic('edit',15))));
+      ? h('a',{class:'fav-main',href,target:'_blank',rel:'noopener noreferrer','aria-label':(c.title||'Open')+' (opens in a new tab)'})
+      : h('button',{class:'fav-main',type:'button','aria-label':'Show '+(c.title||'card')+' on its board',
+          onclick:()=>{ if(cardStatus(c)==='closed') S.closedOpen.add(c.sectionId); S.flash = {kind:'card',id:c.id}; selectBoard(boardOf(sec)); }});
+    return tile({id:c.id,title:c.title,top:(brd&&brd.name)||'',sub:(sec&&sec.name)||'',st,main,match:S.q&&cardHit(c),tip:[brd&&brd.name, sec&&sec.name].filter(Boolean).join(' · ')});
   };
-  const live = list.filter(c=>cardStatus(c)!=='closed'), closed = list.filter(c=>cardStatus(c)==='closed');
-  if(live.length){ const grid = h('div',{class:'favgrid'}); live.forEach(c=>grid.append(tile(c))); wrap.append(grid); }
+  const live = cards.filter(c=>cardStatus(c)!=='closed'), closed = cards.filter(c=>cardStatus(c)==='closed');
+  if(boards.length || live.length){ const grid = h('div',{class:'favgrid'}); boards.forEach(bd=>grid.append(boardTile(bd))); live.forEach(c=>grid.append(cardTile(c))); wrap.append(grid); }
   if(closed.length){
-    const hitClosed = S.q && closed.some(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' ')));
+    const hitClosed = S.q && closed.some(cardHit);
     const open = S.favClosedOpen || !!hitClosed;
     wrap.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),onclick:()=>{ S.favClosedOpen=!S.favClosedOpen; render(); }},
       ic('caret',12), 'Closed', h('span',{class:'cn',text:String(closed.length)})));
-    if(open){ const grid = h('div',{class:'favgrid'}); closed.forEach(c=>grid.append(tile(c))); wrap.append(grid); }
+    if(open){ const grid = h('div',{class:'favgrid'}); closed.forEach(c=>grid.append(cardTile(c))); wrap.append(grid); }
   }
 }
 
@@ -1162,12 +1295,7 @@ function cardEl(c, sec){
   return el;
 }
 
-const ROW_UNIT = 8, ROW_GAP = 16;
-function fitSpan(el){ el.style.gridRowEnd = 'span ' + Math.max(1, Math.ceil((el.offsetHeight + ROW_GAP) / ROW_UNIT)); }
-const secRO = (typeof ResizeObserver !== 'undefined') ? new ResizeObserver(entries=>entries.forEach(e=>fitSpan(e.target))) : null;
-
 function renderBoard(b){
-  if(secRO) secRO.disconnect();
   plane.replaceChildren();
   if(!ready()){ plane.append(h('div',{class:'empty'},h('p',{text:'Loading your map…'}))); return; }
   if(!b){
@@ -1176,23 +1304,29 @@ function renderBoard(b){
       h('button',{class:'btn primary',onclick:()=>openBoardEditor({})}, ic('plus',14),'New board')));
     return;
   }
-  const secs = Model.sectionsSorted(b.id);   // A–Z; the grid places them
+  const secs = Model.sectionsSorted(b.id);   // A–Z; the grid places them left to right
   if(!secs.length){
     plane.append(h('div',{class:'empty'},
+      
       h('h2',{text:'Map your information'}),
-      h('p',{text:'Add a section for each app or place where data lives, then add cards for what it stores. Drag cards between sections as things move.'}),
+      h('p',{text:'Add a section for each app or place where data lives, then add cards for what it stores.'}),
       h('button',{class:'btn primary',onclick:()=>openSectionEditor({})}, ic('plus',14),'Add first section')));
     return;
   }
+  const q = S.q; let rendered = 0;
   secs.forEach(sec=>{
     const all = Model.cardsIn(sec.id);
-    const shown = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
+    const tagged = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
+    const secHit = !!q && hit((sec.name||'')+' '+(sec.description||'')+' '+(sec.url||''));
+    const shown = (q && !secHit) ? tagged.filter(cardHit) : tagged;      // searching: only matching cards
+    if(q && !secHit && !shown.length) return;                            // …and only sections that have a match
+    rendered++;
     const href = safeHref(sec.url);
     const list = h('div',{class:'s-cards','data-section':sec.id,'data-empty':S.tag?'No cards with this tag':'No cards yet'});
     const live = shown.filter(c=>cardStatus(c)!=='closed'), closed = shown.filter(c=>cardStatus(c)==='closed');
     live.forEach(c=>list.append(cardEl(c,sec)));
     if(closed.length){
-      const hitClosed = S.q && closed.some(c=>hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' ')));
+      const hitClosed = q && closed.some(cardHit);
       const open = S.closedOpen.has(sec.id) || !!hitClosed;
       list.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),
         onclick:()=>{ if(S.closedOpen.has(sec.id)) S.closedOpen.delete(sec.id); else S.closedOpen.add(sec.id); render(); }},
@@ -1206,20 +1340,22 @@ function renderBoard(b){
         quick.value=''; S.refocus = sec.id;
         await Model.addCard({sectionId:sec.id,title:v});
       }});
-    const secMatch = S.q && hit((sec.name||'')+' '+(sec.description||'')+' '+(sec.url||''));
-    const el = h('div',{class:'section'+(secMatch?' match':'')+(S.tag&&!shown.length?' dim':''),'data-id':sec.id,
+    const filtered = !!(S.tag || (q && !secHit));
+    const el = h('div',{class:'section'+(secHit?' match':'')+(S.tag&&!shown.length?' dim':''),'data-id':sec.id,
         style:'--sc:'+secColor(sec)},
       h('div',{class:'s-head'},
         h('button',{class:'s-title',title:'Edit section',onclick:()=>openSectionEditor({id:sec.id})}, tx(sec.name||'Untitled')),
-        h('span',{class:'s-count',text:S.tag ? shown.length+'/'+all.length : String(all.length)}),
+        h('span',{class:'s-count',text:filtered ? shown.length+'/'+all.length : String(all.length)}),
         href ? h('a',{class:'icon-btn',href,target:'_blank',rel:'noopener noreferrer','aria-label':'Open app'}, ic('external',15)) : null,
         h('button',{class:'icon-btn','aria-label':'Add card with options',title:'Add card',onclick:()=>openCardEditor({sectionId:sec.id})}, ic('plus',16))),
       sec.description ? h('div',{class:'s-desc'}, tx(sec.description)) : null,
       list, quick);
     plane.append(el);
-    fitSpan(el);
-    if(secRO) secRO.observe(el);
   });
+  if(q && !rendered){
+    plane.append(h('div',{class:'empty'},  h('h2',{text:'No matches'}),
+      h('p',{text:'Nothing on this board matches “'+q+'”. A number on another board’s tab means it has matches.'})));
+  }
   if(S.refocus){ const inp = plane.querySelector('.section[data-id="'+S.refocus+'"] .quick'); if(inp) inp.focus(); S.refocus=null; }
 }
 
@@ -1240,12 +1376,17 @@ function renderFolders(b){
   const items = new Map();
   Model.contentsOf(b.id).forEach(c=>{ if(!byId.has(c.folderId)) return; if(!items.has(c.folderId)) items.set(c.folderId,[]); items.get(c.folderId).push(c); });
   items.forEach(a=>a.sort(byName));
-  const force = new Set();
-  if(S.q){
-    const markUp = fid=>{ let p=byId.get(fid), g=0; while(p && g++<50){ force.add(p.id); p = p.parentId ? byId.get(p.parentId) : null; } };
-    byId.forEach(f=>{ if(f.parentId && hit(f.name+' '+(f.note||''))) markUp(f.parentId); });
-    items.forEach((arr,fid)=>{ if(arr.some(i=>hit(i.name+' '+(i.note||'')))) markUp(fid); });
-  }
+  // searching: keep only folders / items that match, plus the folders leading to them
+  const selfHit = f => hit(f.name+' '+(f.note||''));
+  const itemHit = it => hit(it.name+' '+(it.note||''));
+  const vis = new Map();
+  const nodeVisible = f=>{
+    if(!S.q) return true;
+    if(vis.has(f.id)) return vis.get(f.id);
+    vis.set(f.id,false);
+    const v = selfHit(f) || (items.get(f.id)||[]).some(itemHit) || (kids.get(f.id)||[]).some(nodeVisible);
+    vis.set(f.id,v); return v;
+  };
   const memo = new Map();
   const stat = f=>{
     if(memo.has(f.id)) return memo.get(f.id);
@@ -1272,10 +1413,10 @@ function renderFolders(b){
     return h('div',{class:'tnode item'}, row);
   };
   const nodeEl = (f, isRoot)=>{
-    const ch = kids.get(f.id)||[];
-    const its = items.get(f.id)||[];
+    const ch = (kids.get(f.id)||[]).filter(nodeVisible);
+    const its = (items.get(f.id)||[]).filter(it=>!S.q || selfHit(f) || itemHit(it));
     const has = ch.length>0 || its.length>0;
-    const open = has && (!S.collapsed.has(f.id) || force.has(f.id));
+    const open = has && (S.q ? true : !S.collapsed.has(f.id));
     const st = stat(f);
     const parts = [];
     if(st.fc) parts.push(st.fc+' folder'+(st.fc===1?'':'s'));
@@ -1301,7 +1442,9 @@ function renderFolders(b){
     }
     return node;
   };
-  roots.forEach(f=>wrap.append(nodeEl(f,true)));
+  const shownRoots = roots.filter(nodeVisible);
+  if(S.q && !shownRoots.length){ wrap.append(h('div',{class:'fempty'}, h('p',{text:'No folders or items here match “'+S.q+'”.'}))); return; }
+  shownRoots.forEach(f=>wrap.append(nodeEl(f,true)));
 }
 
 /* ---------- universal search ---------- */
@@ -1402,12 +1545,15 @@ function renderResults(){
   let t; qInput.addEventListener('input',()=>{ clearTimeout(t); t=setTimeout(()=>{ S.q=qInput.value.trim().toLowerCase(); S.matchIdx=-1; if(!S.q) S.listView=false; render(); if(S.q && !S.listView) stepMatch(1); },150); });
   qInput.addEventListener('keydown',e=>{ if(e.key==='Escape'){ clearSearch(); render(); } });
   sw.append(qInput);
+  sw.append(h('button',{class:'sclear',type:'button','aria-label':'Clear search',title:'Clear search',
+    onclick:()=>{ clearSearch(); render(); qInput.focus(); }}, ic('close',14)));
   const guard = fn => ()=>{ if(!S.store) return toast('Still loading…'); fn(); };
   $('#actions').append(
-    h('button',{class:'btn primary',id:'btnSection',hidden:true,onclick:guard(()=>openSectionEditor({}))}, ic('plus',14),'Section'),
-    h('button',{class:'btn',id:'btnCard',hidden:true,onclick:guard(()=>openCardEditor({}))}, ic('plus',14),'Card'),
-    h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:guard(()=>openFolderSheet({}))}, ic('plus',14),'Folder'),
-    h('select',{id:'tagSel',class:'tagsel',hidden:true,'aria-label':'Filter by tag',title:'Filter by tag',onchange:e=>{ S.tag = e.target.value || null; S.matchIdx=-1; render(); }})
+    h('select',{id:'tagSel',class:'tagsel',hidden:true,'aria-label':'Filter by tag (all boards)',title:'Filter by tag (all boards)',onchange:e=>{ S.tag = e.target.value || null; S.matchIdx=-1; render(); }}),
+    h('div',{class:'act-btns'},
+      h('button',{class:'btn primary',id:'btnSection',hidden:true,onclick:guard(()=>openSectionEditor({}))}, ic('plus',14),'Section'),
+      h('button',{class:'btn',id:'btnCard',hidden:true,onclick:guard(()=>openCardEditor({}))}, ic('plus',14),'Card'),
+      h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:guard(()=>openFolderSheet({}))}, ic('plus',14),'Folder'))
   );
 })();
 
