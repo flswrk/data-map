@@ -68,6 +68,10 @@ mark{background:var(--hl);color:inherit;border-radius:4px;padding:0 2px}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0}
 
+/* PWA status bar: a solid strip in the page colour behind the clock/battery area, so nothing shows through it
+   (below the modal overlay, so sheets still dim it). Zero height wherever there is no safe-area inset. */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:1500;pointer-events:none}
+
 /* header: row 1 = name + add buttons, row 2 = search + tag filter (desktop: everything on one row) */
 #top{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 16px 4px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--bg);position:relative;z-index:5}
 #top::before{content:"";order:3;flex:0 0 100%;height:0;margin-top:-10px}
@@ -86,7 +90,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .search input:placeholder-shown ~ .sclear{display:none}
 #actions{display:contents}
 .act-btns{order:2;display:flex;gap:8px;justify-content:flex-end;flex:none}
-#tagSel{order:5;flex:0 0 150px;width:150px;max-width:150px}
+#tagSel,#boardTagSel{order:5;flex:0 0 104px;width:104px;max-width:104px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;white-space:nowrap;font-weight:600;transition:background .15s,border-color .15s,transform .1s}
 .btn:hover{border-color:var(--ink)}
 .btn:active{transform:scale(.97)}
@@ -101,13 +105,17 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .tagsel:hover{border-color:var(--ink)}
 .tagsel.on{background-color:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")}
 .tagsel:disabled{opacity:1;color:var(--faint);cursor:default}
-@media (max-width:520px){.brand h1{font-size:20px}.act-btns .btn{padding:0 14px}}
+@media (max-width:520px){
+  .brand h1{font-size:20px}.act-btns .btn{padding:0 14px}
+  .search{flex:1 1 100%}                                  /* phones: search on its own row, the two filters share the next one */
+  #tagSel,#boardTagSel{flex:1 1 0;width:auto;max-width:none}
+}
 @media (min-width:961px){
   #top{flex-wrap:nowrap;padding-bottom:6px;gap:14px}
   #top::before{display:none}
   .brand{order:1;flex:0 0 230px}
   .search{order:2}
-  #tagSel{order:3;flex:0 0 190px;width:190px;max-width:190px}
+  #tagSel,#boardTagSel{order:3;flex:0 0 150px;width:150px;max-width:150px}
   .act-btns{order:4}
 }
 
@@ -133,7 +141,14 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{outline-offset:0
 .tab.on.fav .tab-main svg{color:#EBCDB5}
 .tab .n{font-size:12px;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 8px;font-weight:700}
 .tab.on .n{background:#fff;color:var(--accent)}
-#banner{background:color-mix(in srgb,var(--danger) 12%,var(--panel));padding:8px 16px;font-size:14px;border-bottom:1px solid var(--line)}
+#banner{display:flex;align-items:center;gap:10px;background:color-mix(in srgb,var(--danger) 12%,var(--panel));padding:8px 16px;font-size:14px;border-bottom:1px solid var(--line)}
+#banner span{flex:1;min-width:0}
+#banner .icon-btn{width:32px;height:32px}
+#sync{color:var(--muted);font-size:12px;font-weight:700}
+.brand h1{white-space:nowrap}
+.netdot{display:inline-block;width:10px;height:10px;margin-left:6px;border-radius:50%;vertical-align:middle;background:var(--st-live);box-shadow:0 0 0 3px color-mix(in srgb,var(--st-live) 22%,transparent)}
+.netdot.off{background:var(--danger);box-shadow:0 0 0 3px color-mix(in srgb,var(--danger) 22%,transparent)}
+#sync.off{color:var(--danger)}
 
 /* views */
 main{flex:1;min-height:0;display:flex}
@@ -159,8 +174,6 @@ main{flex:1;min-height:0;display:flex}
 .s-desc{padding:10px 16px 0;font-size:14px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .s-cards{display:flex;flex-direction:column;gap:8px;padding:12px;min-height:44px}
 .s-cards:empty::before{content:attr(data-empty);color:var(--muted);font-size:14px;text-align:center;padding:12px;border:1px dashed var(--line2);border-radius:var(--r-md)}
-.section.dim{border-style:dashed;box-shadow:none}
-.section.dim .s-head{background:color-mix(in srgb,var(--sc) 55%,#5F5873)}
 
 /* cards */
 .card{display:flex;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:var(--r-md);padding:10px 12px;cursor:pointer;min-width:0;transition:border-color .15s,background .15s}
@@ -390,11 +403,11 @@ main{flex:1;min-height:0;display:flex}
 <body>
 
 <header id="top">
-  <div class="brand"><h1>DataMap</h1><span id="stats"></span></div>
+  <div class="brand"><h1>DataMap<span id="netDot" class="netdot" role="img" aria-label="Online" title="Online"></span></h1><span id="stats"></span><span id="sync" role="status" hidden></span></div>
   <div class="search" id="searchWrap"></div>
   <div class="actions" id="actions"></div>
 </header>
-<nav id="tabs" role="tablist" aria-label="Boards"></nav>
+<nav id="tabs" aria-label="Boards"></nav>
 <div id="banner" hidden></div>
 <div id="searchbar" hidden></div>
 <main>
@@ -413,8 +426,9 @@ main{flex:1;min-height:0;display:flex}
    file to GitHub Pages (or any static host).
    Leave apiKey and projectId empty to run in LOCAL MODE (data stays in
    this browser only).
-   These values are safe to publish: access is enforced by the Firestore
-   security rules in firestore.rules.
+   These values identify your project (they are not passwords). Access is only as
+   strict as the Firestore rules at the top of this file: the open rules shown there
+   let anyone with the page address read and edit the data.
    ===================================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyCuDdS4xP2FMSM2Jj2HD54xgpBXrOV7o2A",
@@ -425,6 +439,13 @@ const firebaseConfig = {
   appId: "1:928465043955:web:eead7087127ebcacdfd286",
   measurementId: "G-TCKFRYP8HK"
 };
+
+/* =====================================================================
+   FILE MAP
+   1. Data model + constants      4. Editor sheets (board, card, section, folder, content)
+   2. Storage adapters (cloud / local) + Model     5. Rendering (chrome, favourites, boards, folders)
+   3. UI helpers (h, ic, toast, modal sheet, pickers)   6. Search, header wiring, banner, init
+   ===================================================================== */
 
 /* =====================================================================
    DATA MODEL  (independent of the UI)
@@ -479,37 +500,52 @@ const isFavKind = b => !!b && (b.kind==='favourites' || b.kind==='favs');
 
 const S = { boards:new Map(), sections:new Map(), cards:new Map(), folders:new Map(), contents:new Map(),
   got:{boards:false,sections:false,cards:false,folders:false,contents:false},
-  boardId:null, q:'', listView:false, matchIdx:-1, tag:null, closedOpen:new Set(), favClosedOpen:false, store:null, refocus:null, collapsed:new Set(), flash:null, mainCreating:false };
+  boardId:null, q:'', listView:false, matchIdx:-1, tag:null, boardTag:null, closedOpen:new Set(), favClosedOpen:false, store:null, collapsed:new Set(), flash:null, mainCreating:false, clinFavCreating:false,
+  resetScroll:false, pending:{}, loadError:null };
 S.boardId = 'fav';   // the app always opens on the Favourites board
 
-/* ---------- storage adapters (same interface) ---------- */
-const chains = new Map();
-function enqueue(key, fn){
-  const prev = chains.get(key) || Promise.resolve();
-  const p = prev.catch(()=>{}).then(fn);
-  chains.set(key, p);
-  const done = ()=>{ if(chains.get(key)===p) chains.delete(key); };
-  p.then(done, done);
-  return p;
-}
+/* ---------- storage adapters (same interface: subscribe / set / update / remove / batch) ---------- */
+/* A batch is a list of operations: {op:'set',coll,id,data} | {op:'update',coll,id,patch} | {op:'remove',coll,id} */
+const removeOp = (coll,id)=>({op:'remove',coll,id});
+
 /* ---- Firebase Firestore (cloud) ---- */
 function firebaseStore(db){
   // Keep a local copy so DataMap opens instantly and works offline; writes sync when back online.
   try{ db.enablePersistence({synchronizeTabs:true}).catch(()=>{}); }catch(e){}
-  const wrap = p => Promise.resolve(p).catch(e=>{ throw {code:(e&&e.code)||'error', message:(e&&e.message)||''}; });
+  // Firestore applies a write to the local copy at once, but only resolves its promise when the SERVER
+  // confirms it, which never happens offline. So writes are never awaited: the UI updates from the local
+  // snapshot, and a failed write is reported by toast.
+  const fire = promise => { Promise.resolve(promise).catch(e=>reportError({code:(e&&e.code)||'error'})); };
+  const MAX_BATCH = 400;   // Firestore allows 500 operations per batch
   return {
     mode:'cloud',
     async start(){},
-    subscribe(coll, cb, err){
-      return db.collection(coll).onSnapshot(snap=>{
+    subscribe(coll, onData, onError, onPending){
+      let first = true;
+      return db.collection(coll).onSnapshot({includeMetadataChanges:true}, snap=>{
+        if(onPending) onPending(snap.metadata.hasPendingWrites);
+        if(!first && !snap.docChanges().length) return;     // metadata-only change (a write was confirmed): nothing to redraw
+        first = false;
         const m = new Map();
         snap.docs.forEach(d=>m.set(d.id, {...d.data(), id:d.id}));
-        cb(m);
-      }, err);
+        onData(m);
+      }, onError);
     },
-    set(coll,id,d){ const {id:_, ...rest} = d; return enqueue(coll+'/'+id, ()=>wrap(db.collection(coll).doc(id).set(rest))); },
-    update(coll,id,p){ return enqueue(coll+'/'+id, ()=>wrap(db.collection(coll).doc(id).update(p))); },
-    remove(coll,id){ return enqueue(coll+'/'+id, ()=>wrap(db.collection(coll).doc(id).delete())); }
+    set(coll,id,d){ const {id:_, ...rest} = d; fire(db.collection(coll).doc(id).set(rest)); },
+    update(coll,id,p){ fire(db.collection(coll).doc(id).update(p)); },
+    remove(coll,id){ fire(db.collection(coll).doc(id).delete()); },
+    batch(ops){
+      for(let i=0; i<ops.length; i+=MAX_BATCH){
+        const wb = db.batch();
+        ops.slice(i,i+MAX_BATCH).forEach(o=>{
+          const ref = db.collection(o.coll).doc(o.id);
+          if(o.op==='remove') wb.delete(ref);
+          else if(o.op==='set') wb.set(ref,o.data);
+          else wb.update(ref,o.patch);
+        });
+        fire(wb.commit());
+      }
+    }
   };
 }
 
@@ -522,7 +558,10 @@ function localStore(){
     const saved = JSON.parse(localStorage.getItem(KEY)||'{}');
     COLLS.forEach(c=>Object.entries(saved[c]||{}).forEach(([id,d])=>data[c].set(id,{...d,id})));
   }catch(e){}
-  const persist = ()=>{ try{ const o={}; COLLS.forEach(c=>{ o[c]={}; data[c].forEach((d,id)=>{ const {id:_,...r}=d; o[c][id]=r; }); }); localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){} };
+  const persist = ()=>{
+    try{ const o={}; COLLS.forEach(c=>{ o[c]={}; data[c].forEach((d,id)=>{ const {id:_,...r}=d; o[c][id]=r; }); }); localStorage.setItem(KEY,JSON.stringify(o)); }
+    catch(e){ reportError({code:'quota_exceeded'}); }    // storage full or blocked (e.g. private mode)
+  };
   const emit = c => { persist(); subs[c].forEach(cb=>cb(new Map(data[c]))); };
   return {
     mode:'local',
@@ -530,7 +569,18 @@ function localStore(){
     subscribe(c, cb){ subs[c].push(cb); setTimeout(()=>cb(new Map(data[c])),0); return ()=>{}; },
     async set(c,id,d){ data[c].set(id,{...d,id}); emit(c); },
     async update(c,id,p){ if(!data[c].has(id)) throw {code:'invalid_argument'}; data[c].set(id,{...data[c].get(id),...p}); emit(c); },
-    async remove(c,id){ data[c].delete(id); emit(c); }
+    async remove(c,id){ data[c].delete(id); emit(c); },
+    async batch(ops){
+      const touched = new Set();
+      ops.forEach(o=>{
+        const coll = data[o.coll];
+        if(o.op==='remove') coll.delete(o.id);
+        else if(o.op==='set') coll.set(o.id,{...o.data,id:o.id});
+        else if(coll.has(o.id)) coll.set(o.id,{...coll.get(o.id),...o.patch});
+        touched.add(o.coll);
+      });
+      touched.forEach(emit);
+    }
   };
 }
 
@@ -543,19 +593,36 @@ const byName = (x,y)=>cmp(x.name,y.name);
 const byTitle = (x,y)=>cmp(x.title,y.title);
 const byStatusTitle = (a,b)=>(STATUS_ORDER.indexOf(cardStatus(a))-STATUS_ORDER.indexOf(cardStatus(b))) || byTitle(a,b);
 
+/* Turn a storage error into a short message for the user. */
+function reportError(e){
+  const code = e && e.code;
+  if(code==='quota_exceeded') toast('Couldn’t save to this browser — storage is full or blocked.');
+  else if(code==='invalid_argument' || code==='not-found') toast('Couldn’t save — that item no longer exists.');
+  else if(code==='permission-denied' || code==='unauthenticated') toast('Not allowed — check your Firestore rules (see the top of this file).');
+  else if(code==='resource-exhausted') toast('Firebase quota reached for today. Try again later.');
+  else if(code==='unavailable') toast('You appear to be offline — changes will sync when you reconnect.');
+  else toast('Couldn’t save ('+(code||'error')+'). Try again.');
+}
+/* Await a storage call. Returns its result, or null after reporting the error. */
 async function run(promise){
   try{ return await promise; }
-  catch(e){
-    const code = e && e.code;
-    if(code==='quota_exceeded') toast('Storage limit reached — delete some items first.');
-    else if(code==='invalid_argument' || code==='not-found') toast('Couldn’t save — that item no longer exists.');
-    else if(code==='permission-denied' || code==='unauthenticated') toast('Not allowed — check your Firestore rules (see the top of this file).');
-    else if(code==='resource-exhausted') toast('Firebase quota reached for today. Try again later.');
-    else if(code==='unavailable') toast('You appear to be offline — changes will sync when you reconnect.');
-    else toast('Couldn’t save ('+(code||'error')+'). Try again.');
-    return null;
-  }
+  catch(e){ reportError(e); return null; }
 }
+
+/* Indexes rebuilt only when a new snapshot replaces the Map (not on every lookup). */
+function memoByMap(getMap, build){
+  let source = null, value = null;
+  return ()=>{ const m = getMap(); if(m!==source){ source = m; value = build(m); } return value; };
+}
+function groupBy(map, keyOf, sorter){
+  const groups = new Map();
+  map.forEach(x=>{ const k = keyOf(x); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(x); });
+  if(sorter) groups.forEach(list=>list.sort(sorter));
+  return groups;
+}
+const cardsBySection = memoByMap(()=>S.cards, cards=>groupBy(cards, c=>c.sectionId, byStatusTitle));
+const sectionsByBoard = memoByMap(()=>S.sections, sections=>groupBy(sections, boardOf));
+const NO_ITEMS = Object.freeze([]);
 
 const Model = {
   /* boards */
@@ -563,39 +630,38 @@ const Model = {
   addBoard(d){ const id=uid('b'); const t=now();
     return run(S.store.set('boards',id,{name:'Board',kind:'board',...d,createdAt:t,updatedAt:t})).then(r=>r===null?null:id); },
   updateBoard(id,p){ return run(S.store.update('boards',id,{...p,updatedAt:now()})); },
-  async deleteBoard(id){
-    for(const s of Model.sectionsOf(id)){
-      for(const c of Model.cardsIn(s.id)) await run(S.store.remove('cards',c.id));
-      await run(S.store.remove('sections',s.id));
-    }
-    for(const c of Model.contentsOf(id)) await run(S.store.remove('contents',c.id));
-    for(const f of Model.foldersOf(id)) await run(S.store.remove('folders',f.id));
-    return run(S.store.remove('boards',id));
+  deleteBoard(id){
+    const ops = [];
+    Model.sectionsOf(id).forEach(s=>{
+      Model.cardsIn(s.id).forEach(c=>ops.push(removeOp('cards',c.id)));
+      ops.push(removeOp('sections',s.id));
+    });
+    Model.contentsOf(id).forEach(c=>ops.push(removeOp('contents',c.id)));
+    Model.foldersOf(id).forEach(f=>ops.push(removeOp('folders',f.id)));
+    ops.push(removeOp('boards',id));
+    return run(S.store.batch(ops));
   },
 
   /* sections */
-  sectionsOf(bid){ return [...S.sections.values()].filter(s=>boardOf(s)===bid); },
+  sectionsOf(bid){ return [...(sectionsByBoard().get(bid)||NO_ITEMS)]; },   // a copy: callers may sort it
   sectionsSorted(bid){ return Model.sectionsOf(bid).sort(byName); },
-  addSection(d){ const id=uid('s'); const t=now(); return run(S.store.set('sections',id,{name:'',description:'',url:'',color:'c0',...d,createdAt:t,updatedAt:t})).then(()=>id); },
+  addSection(d){ const id=uid('s'); const t=now(); return run(S.store.set('sections',id,{name:'',description:'',url:'',color:'c0',...d,createdAt:t,updatedAt:t})).then(r=>r===null?null:id); },
   updateSection(id,p){ return run(S.store.update('sections',id,{...p,updatedAt:now()})); },
-  async deleteSection(id, moveToId){
-    const cards = Model.cardsIn(id);
-    if(moveToId){
-      for(const c of cards){ await run(S.store.update('cards',c.id,{sectionId:moveToId,updatedAt:now()})); }
-    } else {
-      for(const c of cards){ await run(S.store.remove('cards',c.id)); }
-    }
-    return run(S.store.remove('sections',id));
+  deleteSection(id, moveToId){
+    const ops = Model.cardsIn(id).map(c=> moveToId
+      ? {op:'update',coll:'cards',id:c.id,patch:{sectionId:moveToId,updatedAt:now()}}
+      : removeOp('cards',c.id));
+    ops.push(removeOp('sections',id));
+    return run(S.store.batch(ops));
   },
 
   /* cards */
   favBoardList(){ return [FAV_BOARD, ...[...S.boards.values()].filter(b=>b.kind==='favs').sort(byName)]; },
   favBoards(id){ id = id || FAV_ID; return [...S.boards.values()].filter(b=>b.kind!=='favs' && inFav(b,id)).sort(byName); },
   favCards(id){ id = id || FAV_ID; return [...S.cards.values()].filter(c=>inFav(c,id) && S.sections.has(c.sectionId)).sort(byStatusTitle); },
-  cardsIn(sectionId){ return [...S.cards.values()].filter(c=>c.sectionId===sectionId).sort(byStatusTitle); },
-  addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'dormant',...d,createdAt:t,updatedAt:t})).then(()=>id); },
+  cardsIn(sectionId){ return cardsBySection().get(sectionId) || NO_ITEMS; },   // shared sorted list: do not modify
+  addCard(d){ const id=uid('c'); const t=now(); return run(S.store.set('cards',id,{title:'',body:'',url:'',tags:[],status:'dormant',...d,createdAt:t,updatedAt:t})).then(r=>r===null?null:id); },
   updateCard(id,p){ return run(S.store.update('cards',id,{...p,updatedAt:now()})); },
-  saveCardFull(card){ return run(S.store.set('cards',card.id,{...card,updatedAt:now()})); },
   deleteCard(id){ return run(S.store.remove('cards',id)); },
 
   /* folders */
@@ -614,11 +680,13 @@ const Model = {
   addFolder(d){ const id=uid('f'); const t=now();
     return run(S.store.set('folders',id,{name:'Folder',parentId:null,...d,createdAt:t,updatedAt:t})).then(r=>r===null?null:id); },
   updateFolder(id,p){ return run(S.store.update('folders',id,{...p,updatedAt:now()})); },
-  async deleteFolder(id){
-    const f = S.folders.get(id); if(!f) return;
+  deleteFolder(id){
+    const f = S.folders.get(id); if(!f) return Promise.resolve();
     const ids = new Set(Model.descendants(f.boardId,id).concat(id));
-    for(const c of [...S.contents.values()]) if(ids.has(c.folderId)) await run(S.store.remove('contents',c.id));
-    for(const x of ids) await run(S.store.remove('folders',x));
+    const ops = [];
+    S.contents.forEach(c=>{ if(ids.has(c.folderId)) ops.push(removeOp('contents',c.id)); });
+    ids.forEach(x=>ops.push(removeOp('folders',x)));
+    return run(S.store.batch(ops));
   },
   moveFolder(id,newParentId){ return Model.updateFolder(id,{parentId:newParentId||null}); },
   folderPath(f){
@@ -630,10 +698,11 @@ const Model = {
   /* folder contents */
   contentsOf(bid){ return [...S.contents.values()].filter(c=>c.boardId===bid); },
   contentsIn(fid){ return [...S.contents.values()].filter(c=>c.folderId===fid).sort(byName); },
-  async addContents(boardId, folderId, entries){
-    const t=now();
-    await Promise.all(entries.map(e=>{ const o = typeof e==='string' ? {name:e,note:''} : e;
-      return run(S.store.set('contents',uid('i'),{boardId,folderId,name:o.name,note:o.note||'',createdAt:t,updatedAt:t})); }));
+  addContents(boardId, folderId, entries){
+    const t = now();
+    const ops = entries.map(e=>{ const o = typeof e==='string' ? {name:e,note:''} : e;
+      return {op:'set',coll:'contents',id:uid('i'),data:{boardId,folderId,name:o.name,note:o.note||'',createdAt:t,updatedAt:t}}; });
+    return run(S.store.batch(ops));
   },
   updateContent(id,p){ return run(S.store.update('contents',id,{...p,updatedAt:now()})); },
   deleteContent(id){ return run(S.store.remove('contents',id)); }
@@ -660,9 +729,7 @@ function h(tag, attrs, ...kids){
 }
 const ICONS = {
   plus:'<path d="M12 5v14M5 12h14"/>',
-  grip:'<g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></g>',
   search:'<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4-4"/>',
-  arrange:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
   external:'<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',
   board:'<rect x="3" y="4" width="8" height="10" rx="1.5"/><rect x="13" y="4" width="8" height="6" rx="1.5"/><rect x="13" y="12" width="8" height="8" rx="1.5"/><rect x="3" y="16" width="8" height="4" rx="1.5"/>',
@@ -677,7 +744,6 @@ const ICONS = {
   note:'<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 13h7M9 17h5"/>',
   star:'<path d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
   starFill:'<path fill="currentColor" d="M12 3.6l2.6 5.3 5.8.9-4.2 4.1 1 5.8L12 17l-5.2 2.7 1-5.8-4.2-4.1 5.8-.9z"/>',
-  tag:'<path d="M20.6 13.4l-7.2 7.2a2 2 0 0 1-2.8 0L3 13V4h9l8.6 8.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="8.5" r="1.3" fill="currentColor"/>',
   close:'<path d="M6 6l12 12M18 6L6 18"/>'
 };
 function ic(name,size=16){
@@ -708,13 +774,32 @@ function splitLabel(label){
 }
 function linkText(u, hlText){
   const [a,b] = splitLabel(linkLabel(u));
-  const f = hlText ? hl : (x=>x);
+  const f = hlText ? highlight : (x=>x);
   return h('span',{class:'lk'}, h('span',{class:'lk-s'}, f(a)), b ? h('span',{class:'lk-e'}, f(b)) : null);
 }
-function hostOf(u){ try{ return new URL(safeHref(u)).host.replace(/^www\./,''); }catch(e){ return u; } }
-const tx = s => S.q ? hl(s) : s;
-const cardHit = c => hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
-const secColor = sec => 'var(--'+((sec&&sec.color)||'c0')+')';
+const highlightIfSearching = s => S.q ? highlight(s) : s;
+/* search text of an item: its non-empty parts joined (a missing name must never read as "undefined") */
+const textOf = (...parts) => parts.filter(Boolean).join(' ');
+const cardHit = c => matchesQuery(textOf(c.title,c.body,c.url,(c.tags||[]).join(' ')));
+const boardHit = bd => matchesQuery(textOf(bd.name,(bd.tags||[]).join(' ')));
+const secColor = sec => 'var(--'+(sec && COLORS.includes(sec.color) ? sec.color : 'c0')+')';   // only known colours reach the style attribute
+/* Enter / Space on a focused row acts like a click (not when focus is on a button inside the row). */
+const onActivateKey = action => e=>{ if((e.key==='Enter'||e.key===' ') && e.target===e.currentTarget){ e.preventDefault(); action(); } };
+
+/* ---------- keyboard focus survives re-renders ---------- */
+/* Every render rebuilds the DOM, which would drop keyboard focus. Before rendering we note which element had it
+   (a data-fk key, or the nearest data-id), and afterwards we give focus back to its replacement. */
+function focusKeyOf(el){
+  const node = el && el.closest && el.closest('[data-fk],[data-id]');
+  return node ? (node.dataset.fk || 'id:'+node.dataset.id) : null;
+}
+function restoreFocus(key){
+  if(!key) return;
+  const node = document.querySelector(key.startsWith('id:') ? '[data-id="'+key.slice(3)+'"]' : '[data-fk="'+key+'"]');
+  if(!node) return;
+  const target = node.matches('a,button,input,select,textarea,[tabindex]') ? node : node.querySelector('a,button');
+  if(target) target.focus({preventScroll:true});
+}
 
 let toastTimer;
 function toast(msg, action){
@@ -736,10 +821,20 @@ function selectBoard(id){
 
 /* ---------- modal sheet ---------- */
 let sheetClose = null;
+const FOCUSABLE = 'a[href],button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[tabindex]:not([tabindex="-1"])';
+/* keep Tab / Shift+Tab inside the open sheet */
+function trapTab(e, container){
+  const items = [...container.querySelectorAll(FOCUSABLE)].filter(x=>x.offsetParent!==null);
+  if(!items.length) return;
+  const first = items[0], last = items[items.length-1];
+  if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+}
 function openSheet(build){
   closeSheet();
+  const openerKey = focusKeyOf(document.activeElement);   // focus returns here when the sheet closes
   const ov = h('div',{class:'overlay'});
-  const sheet = h('div',{class:'sheet',role:'dialog','aria-modal':'true'});
+  const sheet = h('div',{class:'sheet fit',role:'dialog','aria-modal':'true'});
   const nativeAppend = sheet.append.bind(sheet);
   sheet.append = (...k)=>nativeAppend(...k.filter(x=>x!=null&&x!==false));
   ov.append(sheet);
@@ -747,12 +842,14 @@ function openSheet(build){
   // close on the tap's CLICK (while the overlay still catches it) so nothing underneath is selected or opened
   ov.addEventListener('click', e=>{ if(e.target===ov && Date.now()-openedAt>150){ e.preventDefault(); e.stopPropagation(); closeSheet(); } });
   ov.addEventListener('pointerdown', e=>{ if(e.target===ov) e.preventDefault(); });
+  ov.addEventListener('keydown', e=>{ if(e.key==='Tab') trapTab(e, sheet); });
   document.body.append(ov);
-  sheetClose = ()=>{ ov.remove(); sheetClose=null; };
+  sheetClose = ()=>{ ov.remove(); sheetClose=null; if(!document.activeElement || document.activeElement===document.body) restoreFocus(openerKey); };
   build(sheet);
+  const heading = sheet.querySelector('h3');
+  if(heading){ heading.id = 'sheet-title'; sheet.setAttribute('aria-labelledby','sheet-title'); }
 }
 function closeSheet(){ if(sheetClose) sheetClose(); }
-document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeSheet(); });
 /* every tag used anywhere (cards AND boards) — the one shared list */
 function knownTagMap(){
   const m = new Map();
@@ -775,7 +872,8 @@ function makeTagPicker(initial){
   function add(raw){
     String(raw||'').split(',').forEach(t=>{
       t = t.trim().slice(0,40); const k = tagKey(t);
-      if(!k || (!sel.has(k) && sel.size>=20)) return;
+      if(!k) return;
+      if(!sel.has(k) && sel.size>=20){ toast('Up to 20 tags per item.'); return; }
       if(!labels.has(k)) labels.set(k,t);
       sel.add(k);
     });
@@ -808,58 +906,103 @@ function makeFavPicker(initial, initialColor){
   paint();
   return {el:h('div',{class:'favfield'}, row, chips, colorBox), ids:()=>boards.filter(b=>set.has(b.id)).map(b=>b.id), color:()=>color};
 }
-function field(label, input, hint){ return h('div',{class:'f'}, h('label',{text:label}), input); }
+function field(label, input){ return h('div',{class:'f'}, h('label',{text:label}), input); }
+
+/* =====================================================================
+   Editor sheets  (board · card · section · folder · content)
+   Each editor: build the inputs → guardedSave → wireSheetInputs.
+   A save that fails keeps the sheet open with what you typed.
+   ===================================================================== */
+
+/* ---------- shared editor helpers ---------- */
+/* Two-tap delete: the first tap arms the button, the second closes the sheet and runs onConfirm. */
+function armedDeleteButton(label, armedLabel, onConfirm){
+  const btn = h('button',{class:'btn danger',type:'button',text:label,onclick:()=>{
+    if(!btn.classList.contains('armed')){ btn.classList.add('armed'); btn.textContent = armedLabel; return; }
+    closeSheet(); onConfirm();
+  }});
+  return btn;
+}
+/* Cancel / Save footer; `leading` (optional) is shown on the left, e.g. a delete button. */
+function sheetFooter(saveLabel, onSave, leading){
+  return h('div',{class:'foot'}, leading, h('span',{class:'spacer'}),
+    h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
+    h('button',{class:'btn primary',type:'button',text:saveLabel,onclick:onSave}));
+}
+/* Required text input: returns the trimmed value, or '' after flagging the field. */
+function requiredValue(input){
+  const value = input.value.trim();
+  if(!value){ input.classList.add('bad'); input.focus(); }
+  return value;
+}
+/* Typing clears the red "bad" state; Enter in `lines` fields saves; Ctrl/⌘+Enter saves from anywhere. */
+function wireSheetInputs(sheet, save, {lines=[], multiline=[]}={}){
+  [...lines,...multiline].forEach(input=>input.addEventListener('input',()=>input.classList.remove('bad')));
+  lines.forEach(input=>input.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } }));
+  sheet.addEventListener('keydown',e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) save(); });
+}
+/* Runs a save one at a time. The sheet closes only if `fn` doesn't return false, so a failed save keeps your text. */
+function guardedSave(fn){
+  let busy = false;
+  return async ()=>{
+    if(busy) return;
+    busy = true;
+    try{ if(await fn() !== false) closeSheet(); }
+    finally{ busy = false; }
+  };
+}
 
 /* ---------- board editor ---------- */
 function openBoardEditor(opts){
   const existing = opts.id ? S.boards.get(opts.id) : null;
-  const d = existing ? {...existing} : {name:'',kind:'board'};
+  const draft = existing ? {...existing} : {name:'',kind:'board'};
   openSheet(sheet=>{
-    const name = h('input',{type:'text',maxlength:'60',placeholder:''}); name.value = d.name||'';
-    const favP = makeFavPicker(favIds(d), d.favColor);
-    const tagP = makeTagPicker(d.tags||[]);
-    const extra = h('details',{class:'more'}, h('summary',{text:'More options'}), h('div',{class:'more-body'}, favP.el, field('Tags', tagP.el)));
+    const name = h('input',{type:'text',maxlength:'60',placeholder:''}); name.value = draft.name||'';
+    const favPicker = makeFavPicker(favIds(draft), draft.favColor);
+    const tagPicker = makeTagPicker(draft.tags||[]);
+    const extra = h('details',{class:'more'}, h('summary',{text:'More options'}), h('div',{class:'more-body'}, favPicker.el, field('Tags', tagPicker.el)));
     if(existing && (favIds(existing).length || (existing.tags||[]).length)) extra.open = true;
-    const setExtra = ()=>{ extra.hidden = d.kind==='favs'; };
+    const syncExtra = ()=>{ extra.hidden = draft.kind==='favs'; };
+
     let kindField = null;
     if(!existing){
-      const seg = h('div',{class:'seg'});
-      Object.entries(KINDS).forEach(([k,label])=>{
-        seg.append(h('button',{type:'button','aria-pressed':String(d.kind===k),onclick:()=>{ d.kind=k; [...seg.children].forEach((b,i)=>b.setAttribute('aria-pressed',String(Object.keys(KINDS)[i]===k))); setExtra(); }}, ic(k==='board'?'board':(k==='folders'?'folder':'starFill'),14), label));
+      const seg = h('div',{class:'seg'}), kinds = Object.keys(KINDS);
+      kinds.forEach(k=>{
+        seg.append(h('button',{type:'button','aria-pressed':String(draft.kind===k),onclick:()=>{
+          draft.kind = k; [...seg.children].forEach((btn,i)=>btn.setAttribute('aria-pressed',String(kinds[i]===k))); syncExtra(); }},
+          ic(k==='board'?'board':(k==='folders'?'folder':'starFill'),14), KINDS[k]));
       });
       kindField = field('Type', seg);
     }
-    setExtra();
-    let delArea = null;
-    if(existing && S.boards.size>1){
-      const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete board',onclick:async()=>{
-        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent=d.kind==='favs'?'Tap again to delete this favourites board':'Tap again — deletes everything on it'; return; }
-        closeSheet();
-        const rest = Model.boardsSorted().filter(b=>b.id!==existing.id);
-        if(S.boardId===existing.id) selectBoard(rest.length?rest[0].id:'fav');
-        await Model.deleteBoard(existing.id);
-      }});
-      delArea = h('div',{class:'f'}, delBtn);
+    syncExtra();
+
+    let deleteArea = null;
+    if(existing){
+      const realBoardCount = [...S.boards.values()].filter(x=>x.kind!=='favs').length;
+      const deletable = existing.kind==='favs' || realBoardCount>1;     // never delete the last real board
+      deleteArea = deletable
+        ? h('div',{class:'f'}, armedDeleteButton('Delete board',
+            draft.kind==='favs' ? 'Tap again to delete this favourites board' : 'Tap again — deletes everything on it',
+            ()=>{
+              const rest = Model.boardsSorted().filter(b=>b.id!==existing.id);
+              if(S.boardId===existing.id) selectBoard(rest.length?rest[0].id:'fav');
+              return Model.deleteBoard(existing.id);
+            }))
+        : h('p',{class:'hint',text:'This is your only board, so it can’t be deleted.'});
     }
-    async function save(){
-      const n = name.value.trim();
-      if(!n){ name.classList.add('bad'); name.focus(); return; }
-      tagP.flush();
-      const extraData = d.kind==='favs' ? {} : {fav:favP.ids().length>0, favIn:favP.ids(), favColor:favP.color(), tags:tagP.value()};
-      closeSheet();
-      if(existing) await Model.updateBoard(existing.id,{name:n,...extraData});
-      else { const id = await Model.addBoard({name:n,kind:d.kind,...extraData}); if(id){ clearSearch(); selectBoard(id); } }
-    }
-    sheet.classList.add('fit');
-    sheet.append(
-      h('h3',{text:existing?'Edit board':'New board'}),
-      field('Name', name), kindField, extra, delArea,
-      h('div',{class:'foot'}, h('span',{class:'spacer'}),
-        h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-        h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
-    );
-    name.addEventListener('input',()=>name.classList.remove('bad'));
-    name.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } });
+
+    const save = guardedSave(async ()=>{
+      const boardName = requiredValue(name); if(!boardName) return false;
+      tagPicker.flush();
+      const extraData = draft.kind==='favs' ? {} : {fav:favPicker.ids().length>0, favIn:favPicker.ids(), favColor:favPicker.color(), tags:tagPicker.value()};
+      const result = existing
+        ? await Model.updateBoard(existing.id,{name:boardName,...extraData})
+        : await Model.addBoard({name:boardName,kind:draft.kind,...extraData});
+      if(result===null) return false;
+      if(!existing) whenState(()=>S.boards.has(result), ()=>{ clearSearch(); selectBoard(result); });   // open the new board once it has arrived
+    });
+    sheet.append(h('h3',{text:existing?'Edit board':'New board'}), field('Name', name), kindField, extra, deleteArea, sheetFooter('Save', save));
+    wireSheetInputs(sheet, save, {lines:[name]});
     setTimeout(()=>name.focus(),30);
   });
 }
@@ -867,108 +1010,95 @@ function openBoardEditor(opts){
 /* ---------- card editor ---------- */
 function openCardEditor(opts){
   const existing = opts.id ? S.cards.get(opts.id) : null;
-  const exSec = existing ? S.sections.get(existing.sectionId) : null;
-  const b0 = curBoard();
-  const bid = exSec ? boardOf(exSec) : (b0 && b0.kind==='board' ? b0.id : null);
-  if(!bid) return;
-  const secs = Model.sectionsSorted(bid);
-  if(!secs.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
-  const d = existing ? {...existing} : {sectionId:opts.sectionId||secs[0].id, title:'', body:'', url:'', tags:[], status:'dormant'};
-  let status = cardStatus(d);
-  if(!secs.some(s=>s.id===d.sectionId)) d.sectionId = secs[0].id;
+  const existingSection = existing ? S.sections.get(existing.sectionId) : null;
+  const currentBoard = curBoard();
+  const boardId = existingSection ? boardOf(existingSection) : (currentBoard && currentBoard.kind==='board' ? currentBoard.id : null);
+  if(!boardId) return;
+  const sections = Model.sectionsSorted(boardId);
+  if(!sections.length){ toast('Add a section first — cards live inside sections.'); openSectionEditor({}); return; }
+  const draft = existing ? {...existing} : {sectionId:opts.sectionId||sections[0].id, title:'', body:'', url:'', tags:[], status:'dormant'};
+  let status = cardStatus(draft);
+  if(!sections.some(s=>s.id===draft.sectionId)) draft.sectionId = sections[0].id;
 
   openSheet(sheet=>{
-    const secSel = h('select');
-    secs.forEach(s=>{ const o=h('option',{value:s.id,text:s.name||'Untitled'}); if(s.id===d.sectionId) o.selected=true; secSel.append(o); });
-    const title = h('input',{type:'text',maxlength:'200',placeholder:''}); title.value = d.title||'';
-    const body = h('textarea',{rows:'3'}); body.value = d.body||'';
-    const stSeg = h('div',{class:'seg stseg'});
-    STATUS_ORDER.forEach(k=>{ stSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{ status=k; [...stSeg.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }}, h('span',{class:'sdot static','data-s':k}), STATUS[k].label)); });
-    const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:''}); url.value = d.url||'';
-    const favP = makeFavPicker(favIds(d), d.favColor);
-    const favRow = favP.el;
-    const tagP = makeTagPicker(d.tags||[]);
-    const tags = tagP.el;
-
-    const delBtn = existing ? h('button',{class:'btn danger',type:'button',text:'Delete',onclick:async()=>{
-      if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
-      closeSheet(); await Model.deleteCard(existing.id);
-    }}) : null;
-
-    async function save(){
-      const t = title.value.trim();
-      if(!t){ title.classList.add('bad'); title.focus(); return; }
-      const sectionId = secSel.value;
-      tagP.flush();
-      const data = { sectionId, title:t, body:body.value.trim().slice(0,20000), url:url.value.trim(),
-        tags: tagP.value(), status, fav: favP.ids().length>0, favIn: favP.ids(), favColor: favP.color() };
-      closeSheet();
-      if(existing) await Model.saveCardFull({...existing, ...data});
-      else await Model.addCard(data);
-    }
-    const more = h('details',{class:'more'}, h('summary',{text:'More options'}), h('div',{class:'more-body'}, favRow, field('Tags', tags)));
+    const sectionSelect = h('select');
+    sections.forEach(s=>{ const o=h('option',{value:s.id,text:s.name||'Untitled'}); if(s.id===draft.sectionId) o.selected=true; sectionSelect.append(o); });
+    const titleInput = h('input',{type:'text',maxlength:'200',placeholder:''}); titleInput.value = draft.title||'';
+    const bodyInput = h('textarea',{rows:'3',maxlength:'20000'}); bodyInput.value = draft.body||'';
+    const statusSeg = h('div',{class:'seg stseg'});
+    STATUS_ORDER.forEach(k=>{
+      statusSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{
+        status = k; [...statusSeg.children].forEach((btn,i)=>btn.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }},
+        h('span',{class:'sdot static','data-s':k}), STATUS[k].label));
+    });
+    const urlInput = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:''}); urlInput.value = draft.url||'';
+    const favPicker = makeFavPicker(favIds(draft), draft.favColor);
+    const tagPicker = makeTagPicker(draft.tags||[]);
+    const more = h('details',{class:'more'}, h('summary',{text:'More options'}), h('div',{class:'more-body'}, favPicker.el, field('Tags', tagPicker.el)));
     if(existing && (favIds(existing).length || (existing.tags||[]).length)) more.open = true;
-    sheet.classList.add('fit');
+
+    const deleteBtn = existing ? armedDeleteButton('Delete','Tap again to delete',()=>Model.deleteCard(existing.id)) : null;
+
+    const save = guardedSave(async ()=>{
+      const cardTitle = requiredValue(titleInput); if(!cardTitle) return false;
+      if(existing && !S.cards.has(existing.id)){ toast('This card was deleted elsewhere, so your changes weren’t saved.'); return; }
+      tagPicker.flush();
+      // an update (not a full overwrite), so a card deleted or edited elsewhere is never resurrected or clobbered
+      const data = { sectionId:sectionSelect.value, title:cardTitle, body:bodyInput.value.trim().slice(0,20000), url:urlInput.value.trim(),
+        tags:tagPicker.value(), status, fav:favPicker.ids().length>0, favIn:favPicker.ids(), favColor:favPicker.color() };
+      const result = existing ? await Model.updateCard(existing.id,data) : await Model.addCard(data);
+      if(result===null) return false;
+    });
     sheet.append(
       h('h3',{text:existing?'Edit card':'New card'}),
-      field('Card text', title), field('Link', url), field('Note', body), field('Status', stSeg), field('Section', secSel), more,
-      h('div',{class:'foot'}, delBtn, h('span',{class:'spacer'}),
-        h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-        h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
-    );
-    title.addEventListener('input',()=>title.classList.remove('bad'));
-    sheet.addEventListener('keydown',e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) save(); if(e.key==='Enter' && e.target===title){ e.preventDefault(); save(); } });
-    if(!existing) setTimeout(()=>title.focus(),30);
+      field('Card text', titleInput), field('Link', urlInput), field('Note', bodyInput), field('Status', statusSeg), field('Section', sectionSelect), more,
+      sheetFooter('Save', save, deleteBtn));
+    wireSheetInputs(sheet, save, {lines:[titleInput], multiline:[bodyInput]});
+    if(!existing) setTimeout(()=>titleInput.focus(),30);
   });
 }
 
 /* ---------- section editor ---------- */
 function openSectionEditor(opts){
-  const b = curBoard(); if(!b) return;
+  const board = curBoard(); if(!board) return;
   const existing = opts.id ? S.sections.get(opts.id) : null;
-  const d = existing ? {...existing} : {name:'',description:'',url:'',color:COLORS[Model.sectionsOf(b.id).length%COLORS.length]};
+  const draft = existing ? {...existing} : {name:'',description:'',url:'',color:COLORS[Model.sectionsOf(board.id).length%COLORS.length]};
   openSheet(sheet=>{
-    const name = h('input',{type:'text',maxlength:'80',placeholder:''}); name.value=d.name||'';
-    const desc = h('textarea',{rows:'2',maxlength:'400',placeholder:''}); desc.value=d.description||'';
-    const url = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:''}); url.value=d.url||'';
-    const sw = h('div',{class:'swatches'});
-    COLORS.forEach(c=>sw.append(h('button',{type:'button',class:'swatch','aria-label':c,'aria-pressed':String(d.color===c),style:'background:var(--'+c+')',onclick:()=>{ d.color=c; [...sw.children].forEach((x,i)=>x.setAttribute('aria-pressed',String(COLORS[i]===c))); }})));
+    const name = h('input',{type:'text',maxlength:'80',placeholder:''}); name.value = draft.name||'';
+    const description = h('textarea',{rows:'2',maxlength:'400',placeholder:''}); description.value = draft.description||'';
+    const urlInput = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:''}); urlInput.value = draft.url||'';
+    const swatches = h('div',{class:'swatches'});
+    COLORS.forEach(c=>swatches.append(h('button',{type:'button',class:'swatch','aria-label':c,'aria-pressed':String(draft.color===c),style:'background:var(--'+c+')',onclick:()=>{
+      draft.color = c; [...swatches.children].forEach((btn,i)=>btn.setAttribute('aria-pressed',String(COLORS[i]===c))); }})));
 
-    let delArea = null;
+    let deleteArea = null;
     if(existing){
-      const others = Model.sectionsSorted(b.id).filter(s=>s.id!==existing.id);
+      const others = Model.sectionsSorted(board.id).filter(s=>s.id!==existing.id);
       const count = Model.cardsIn(existing.id).length;
-      const mv = h('select');
-      others.forEach(s=>mv.append(h('option',{value:s.id,text:s.name||'Untitled'})));
-      mv.append(h('option',{value:'',text:'Nowhere — delete the cards'}));
-      if(!others.length) mv.value='';
-      const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete section',onclick:async()=>{
-        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
-        closeSheet(); await Model.deleteSection(existing.id, count?mv.value||null:null);
-      }});
-      delArea = h('div',{class:'f'}, count? h('label',{text:'This section has '+count+' card'+(count===1?'':'s')+'. Send them to:'}):null, count?mv:null, h('div',{style:'margin-top:8px'},delBtn));
+      const moveTo = h('select');
+      others.forEach(s=>moveTo.append(h('option',{value:s.id,text:s.name||'Untitled'})));
+      moveTo.append(h('option',{value:'',text:'Nowhere — delete the cards'}));
+      if(!others.length) moveTo.value = '';
+      const deleteBtn = armedDeleteButton('Delete section','Tap again to delete',()=>Model.deleteSection(existing.id, count?moveTo.value||null:null));
+      deleteArea = h('div',{class:'f'},
+        count ? h('label',{text:'This section has '+count+' card'+(count===1?'':'s')+'. Send them to:'}) : null,
+        count ? moveTo : null,
+        h('div',{style:'margin-top:8px'}, deleteBtn));
     }
 
-    async function save(){
-      const n = name.value.trim();
-      if(!n){ name.classList.add('bad'); name.focus(); return; }
-      const data = {name:n, description:desc.value.trim(), url:url.value.trim(), color:d.color};
-      closeSheet();
-      if(existing) await Model.updateSection(existing.id, data);
-      else await Model.addSection({...data, boardId:b.id});
-    }
-    sheet.classList.add('fit');
+    const save = guardedSave(async ()=>{
+      const sectionName = requiredValue(name); if(!sectionName) return false;
+      const data = {name:sectionName, description:description.value.trim(), url:urlInput.value.trim(), color:draft.color};
+      const result = existing ? await Model.updateSection(existing.id, data) : await Model.addSection({...data, boardId:board.id});
+      if(result===null) return false;
+    });
     sheet.append(
       h('h3',{text:existing?'Edit section':'New section'}),
-      field('Name', name), field('Description', desc), field('Link', url),
-      field('Color', sw),
-      delArea,
-      h('div',{class:'foot'}, h('span',{class:'spacer'}),
-        h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-        h('button',{class:'btn primary',type:'button',text:'Save',onclick:save}))
-    );
-    name.addEventListener('input',()=>name.classList.remove('bad'));
-    name.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } });
+      field('Name', name), field('Description', description), field('Link', urlInput),
+      field('Color', swatches),
+      deleteArea,
+      sheetFooter('Save', save));
+    wireSheetInputs(sheet, save, {lines:[name], multiline:[description]});
     if(!existing) setTimeout(()=>name.focus(),30);
   });
 }
@@ -980,7 +1110,7 @@ function folderSelect(bid, blocked, allowTop, value){
   if(allowTop) sel.append(h('option',{value:'',text:'Top level'}));
   const walk = (pid,depth)=>(kids.get(pid)||[]).forEach(c=>{
     if(blocked.has(c.id)) return;
-    sel.append(h('option',{value:c.id,text:'\u00A0\u00A0\u00A0'.repeat(depth)+(depth?'└ ':'')+(c.name||'Untitled')}));
+    sel.append(h('option',{value:c.id,text:'   '.repeat(depth)+(depth?'└ ':'')+(c.name||'Untitled')}));
     walk(c.id,depth+1);
   });
   walk('_root',0);
@@ -989,129 +1119,130 @@ function folderSelect(bid, blocked, allowTop, value){
 }
 
 function openFolderSheet(opts){
-  const b = curBoard(); if(!b) return;
+  const board = curBoard(); if(!board) return;
   const existing = opts.id ? S.folders.get(opts.id) : null;
   const parent = !existing && opts.parentId ? S.folders.get(opts.parentId) : null;
   openSheet(sheet=>{
     const name = h('input',{type:'text',maxlength:'120',placeholder:''}); name.value = existing?existing.name||'':'';
     const note = h('input',{type:'text',maxlength:'160',placeholder:''}); note.value = existing?existing.note||'':'';
-    let moveField = null, delArea = null, parentSel = null;
-    const {byId} = Model.tree(b.id);
-    const curParent = (existing && existing.parentId && byId.has(existing.parentId)) ? existing.parentId : '';
+    let locationField = null, deleteArea = null, parentSelect = null;
+    const {byId} = Model.tree(board.id);
+    const currentParent = (existing && existing.parentId && byId.has(existing.parentId)) ? existing.parentId : '';
 
     if(existing){
-      const blocked = new Set(Model.descendants(b.id,existing.id).concat(existing.id));
-      parentSel = folderSelect(b.id, blocked, true, curParent);
-      moveField = field('Located in', parentSel);
-      const ids = new Set(Model.descendants(b.id,existing.id).concat(existing.id));
-      const subCount = ids.size-1;
-      const itemCount = [...S.contents.values()].filter(c=>ids.has(c.folderId)).length;
+      const subtree = new Set(Model.descendants(board.id,existing.id).concat(existing.id));
+      parentSelect = folderSelect(board.id, subtree, true, currentParent);     // can't move a folder into itself
+      locationField = field('Located in', parentSelect);
+      const subfolderCount = subtree.size-1;
+      const itemCount = [...S.contents.values()].filter(c=>subtree.has(c.folderId)).length;
       const extra = [];
-      if(subCount) extra.push(subCount+' subfolder'+(subCount===1?'':'s'));
+      if(subfolderCount) extra.push(subfolderCount+' subfolder'+(subfolderCount===1?'':'s'));
       if(itemCount) extra.push(itemCount+' item'+(itemCount===1?'':'s'));
-      const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete folder',onclick:async()=>{
-        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent = extra.length?'Tap again — also deletes '+extra.join(' and '):'Tap again to delete'; return; }
-        closeSheet(); await Model.deleteFolder(existing.id);
-      }});
-      delArea = h('div',{class:'f'}, delBtn);
+      deleteArea = h('div',{class:'f'}, armedDeleteButton('Delete folder',
+        extra.length ? 'Tap again — also deletes '+extra.join(' and ') : 'Tap again to delete',
+        ()=>Model.deleteFolder(existing.id)));
     } else {
-      parentSel = folderSelect(b.id, new Set(), true, parent?parent.id:'');
-      moveField = field('Add inside', parentSel);
+      parentSelect = folderSelect(board.id, new Set(), true, parent?parent.id:'');
+      locationField = field('Add inside', parentSelect);
     }
 
-    async function save(){
-      const n = name.value.trim();
-      if(!n){ name.classList.add('bad'); name.focus(); return; }
-      closeSheet();
+    const save = guardedSave(async ()=>{
+      const folderName = requiredValue(name); if(!folderName) return false;
+      const newParent = parentSelect.value||null;
       if(existing){
-        const nt = note.value.trim();
-        if(n!==existing.name || nt!==(existing.note||'')) await Model.updateFolder(existing.id,{name:n,note:nt});
-        const np = parentSel.value||null;
-        if((np||'')!==curParent){ S.collapsed.delete(np); await Model.moveFolder(existing.id,np); S.flash={kind:'folder',id:existing.id}; render(); }
+        const noteText = note.value.trim();
+        if((folderName!==existing.name || noteText!==(existing.note||'')) && await Model.updateFolder(existing.id,{name:folderName,note:noteText})===null) return false;
+        if((newParent||'')!==currentParent){
+          if(await Model.moveFolder(existing.id,newParent)===null) return false;
+          S.collapsed.delete(newParent);
+          whenState(()=>((S.folders.get(existing.id)||{}).parentId||null)===newParent, ()=>{ S.flash={kind:'folder',id:existing.id}; render(); });
+        }
       } else {
-        const np = parentSel.value||null;
-        const id = await Model.addFolder({boardId:b.id, parentId:np, name:n, note:note.value.trim()});
-        if(id){ if(np) expandFrom(np); S.flash={kind:'folder',id}; render(); }
+        const id = await Model.addFolder({boardId:board.id, parentId:newParent, name:folderName, note:note.value.trim()});
+        if(id===null) return false;
+        if(newParent) expandFrom(newParent);
+        whenState(()=>S.folders.has(id), ()=>{ S.flash={kind:'folder',id}; render(); });
       }
-    }
-    const where = null;
-    sheet.classList.add('fit');
+    });
     sheet.append(
       h('h3',{text:existing?'Edit folder':(parent?'New subfolder':'New folder')}),
-      where, field('Folder name', name), field('Note (optional)', note), moveField, delArea,
-      h('div',{class:'foot'}, h('span',{class:'spacer'}),
-        h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-        h('button',{class:'btn primary',type:'button',text:existing?'Save':'Create',onclick:save}))
-    );
-    name.addEventListener('input',()=>name.classList.remove('bad'));
-    [name,note].forEach(i=>i.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } }));
+      field('Folder name', name), field('Note (optional)', note), locationField, deleteArea,
+      sheetFooter(existing?'Save':'Create', save));
+    wireSheetInputs(sheet, save, {lines:[name,note]});
     setTimeout(()=>name.focus(),30);
   });
 }
 
+const MAX_BULK_ITEMS = 100;
 function openContentSheet(opts){
-  const b = curBoard(); if(!b) return;
+  const board = curBoard(); if(!board) return;
   const existing = opts.id ? S.contents.get(opts.id) : null;
   const folder = existing ? S.folders.get(existing.folderId) : S.folders.get(opts.folderId);
   if(!folder) return;
   openSheet(sheet=>{
-    const path = Model.folderPath(folder).map(x=>x.name).join(' / ');
     if(existing){
       const name = h('input',{type:'text',maxlength:'200'}); name.value = existing.name||'';
       const note = h('input',{type:'text',maxlength:'160',placeholder:''}); note.value = existing.note||'';
-      const sel = folderSelect(b.id, new Set(), false, existing.folderId);
-      const delBtn = h('button',{class:'btn danger',type:'button',text:'Delete',onclick:async()=>{
-        if(!delBtn.classList.contains('armed')){ delBtn.classList.add('armed'); delBtn.textContent='Tap again to delete'; return; }
-        closeSheet(); await Model.deleteContent(existing.id);
-      }});
-      async function save(){
-        const n = name.value.trim();
-        if(!n){ name.classList.add('bad'); name.focus(); return; }
-        closeSheet();
-        await Model.updateContent(existing.id,{name:n, note:note.value.trim(), folderId:sel.value});
-        S.collapsed.delete(sel.value); S.flash={kind:'item',id:existing.id}; render();
-      }
-      sheet.classList.add('fit');
+      const folderSel = folderSelect(board.id, new Set(), false, existing.folderId);
+      const deleteBtn = armedDeleteButton('Delete','Tap again to delete',()=>Model.deleteContent(existing.id));
+      const save = guardedSave(async ()=>{
+        const itemName = requiredValue(name); if(!itemName) return false;
+        const targetFolder = folderSel.value;
+        if(await Model.updateContent(existing.id,{name:itemName, note:note.value.trim(), folderId:targetFolder})===null) return false;
+        S.collapsed.delete(targetFolder);
+        whenState(()=>(S.contents.get(existing.id)||{}).folderId===targetFolder, ()=>{ S.flash={kind:'item',id:existing.id}; render(); });
+      });
       sheet.append(
         h('h3',{text:'Edit item'}),
-        field('Item', name), field('Note (optional)', note), field('Located in', sel),
-        h('div',{class:'foot'}, delBtn, h('span',{class:'spacer'}),
-          h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-          h('button',{class:'btn primary',type:'button',text:'Save',onclick:save})));
-      name.addEventListener('input',()=>name.classList.remove('bad'));
-      [name,note].forEach(i=>i.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); save(); } }));
+        field('Item', name), field('Note (optional)', note), field('Located in', folderSel),
+        sheetFooter('Save', save, deleteBtn));
+      wireSheetInputs(sheet, save, {lines:[name,note]});
     } else {
-      const ta = h('textarea',{rows:'7',placeholder:'One item per line\nConsent_forms.pdf | signed copies\nID proofs (scans)\nOld invoices 2023 | paper originals in cabinet'});
-      async function save(){
-        const entries = ta.value.split('\n').map(line=>{ const i=line.indexOf('|'); const n=(i<0?line:line.slice(0,i)).trim().slice(0,200); const nt=(i<0?'':line.slice(i+1)).trim().slice(0,160); return {name:n,note:nt}; }).filter(e=>e.name).slice(0,100);
-        if(!entries.length){ ta.classList.add('bad'); ta.focus(); return; }
-        closeSheet();
-        await Model.addContents(b.id, folder.id, entries);
+      const path = Model.folderPath(folder).map(x=>x.name).join(' / ');
+      const itemsInput = h('textarea',{rows:'7',placeholder:'One item per line\nConsent_forms.pdf | signed copies\nID proofs (scans)\nOld invoices 2023 | paper originals in cabinet'});
+      const save = guardedSave(async ()=>{
+        const entered = itemsInput.value.split('\n').map(line=>{
+          const bar = line.indexOf('|');
+          return {name:(bar<0?line:line.slice(0,bar)).trim().slice(0,200), note:(bar<0?'':line.slice(bar+1)).trim().slice(0,160)};
+        }).filter(e=>e.name);
+        if(!entered.length){ itemsInput.classList.add('bad'); itemsInput.focus(); return false; }
+        if(await Model.addContents(board.id, folder.id, entered.slice(0,MAX_BULK_ITEMS))===null) return false;
+        if(entered.length>MAX_BULK_ITEMS) toast('Added the first '+MAX_BULK_ITEMS+' of '+entered.length+' items — add the rest in another batch.');
         S.collapsed.delete(folder.id); S.flash={kind:'folder',id:folder.id}; render();
-      }
-      sheet.classList.add('fit');
+      });
       sheet.append(
         h('h3',{text:'Add content'}),
         h('p',{class:'hint',text:'To: '+path}),
-        field('Items', ta),
-        h('div',{class:'foot'}, h('span',{class:'spacer'}),
-          h('button',{class:'btn',type:'button',text:'Cancel',onclick:closeSheet}),
-          h('button',{class:'btn primary',type:'button',text:'Add',onclick:save})));
-      ta.addEventListener('input',()=>ta.classList.remove('bad'));
-      sheet.addEventListener('keydown',e=>{ if(e.key==='Enter' && (e.metaKey||e.ctrlKey)) save(); });
+        field('Items', itemsInput),
+        sheetFooter('Add', save));
+      wireSheetInputs(sheet, save, {multiline:[itemsInput]});
     }
-    setTimeout(()=>{ const f=sheet.querySelector('input,textarea'); if(f) f.focus(); },30);
+    setTimeout(()=>{ const first=sheet.querySelector('input,textarea'); if(first) first.focus(); },30);
   });
 }
 
-/* ---------- free-form layout helpers ---------- */
 /* =====================================================================
    Rendering
    ===================================================================== */
+/* Actions that must wait until a just-written item reaches local state (cloud writes resolve before the snapshot arrives). */
+const pendingActions = [];
+function whenState(isReady, action){
+  if(isReady()) { action(); return; }
+  pendingActions.push({isReady, action, expires:Date.now()+10000});
+}
+function runPendingActions(){
+  for(let i=pendingActions.length-1; i>=0; i--){
+    const p = pendingActions[i];
+    if(p.isReady()){ pendingActions.splice(i,1); p.action(); }
+    else if(Date.now()>p.expires) pendingActions.splice(i,1);
+  }
+}
+
+/* Called when new data arrives: coalesces bursts of snapshots into one render per frame. */
 let renderQueued = false;
 function scheduleRender(){
   if(renderQueued) return; renderQueued = true;
-  requestAnimationFrame(()=>{ renderQueued=false; render(); });
+  requestAnimationFrame(()=>{ renderQueued=false; ensureDefaultBoards(); runPendingActions(); render(); });
 }
 const ready = () => COLLS.every(c=>S.got[c]);
 
@@ -1133,36 +1264,41 @@ function ensureMainBoard(){
   run(S.store.set('boards','main',{name:'Main board',kind:'board',order:1000,createdAt:t,updatedAt:t}));
 }
 
+/* Creates the default boards once data has loaded. Runs on data changes only, never from render(). */
+function ensureDefaultBoards(){ ensureMainBoard(); ensureClinFav(); }
+
 function render(){
-  ensureMainBoard();
-  ensureClinFav();
   const b = curBoard();
   const searching = !!S.q;
   const listMode = searching && S.listView;
   const isFolders = !!b && b.kind==='folders';
   const isFav = isFavKind(b);
   const groups = searching && ready() ? searchAll() : null;
-  const tagList = tagsFor();
-  if(S.tag && !tagList.some(t=>t.key===S.tag)) S.tag = null;   // that tag no longer exists anywhere
+  const cardTags = cardTagList(), boardTags = boardTagList();
+  if(S.tag && !cardTags.some(t=>t.key===S.tag)) S.tag = null;             // that tag no longer exists anywhere
+  if(S.boardTag && !boardTags.some(t=>t.key===S.boardTag)) S.boardTag = null;
   // remember where each list was scrolled, so any edit / tap keeps your place (iPhone Safari resets it otherwise)
   const scrollers = [board, foldersEl, favsEl, resultsEl];
   const saved = S.resetScroll ? null : scrollers.map(e=>e.scrollTop);
+  const focusKey = focusKeyOf(document.activeElement);   // keyboard focus survives the rebuild below
   S.resetScroll = false;
   renderChrome(b, groups);
   board.hidden = listMode || isFolders || isFav;
   foldersEl.hidden = listMode || !isFolders;
   favsEl.hidden = listMode || !isFav;
   resultsEl.hidden = !listMode;
-  if(listMode) renderResults();
+  if(listMode) renderResults(groups);
   else if(isFav) renderFavs(b);
   else if(isFolders) renderFolders(b);
   else renderBoard(b);
   renderSearchBar(b, groups);
-  renderTagSelect(tagList);
+  fillTagSelect($('#tagSel'), cardTags, S.tag, {allLabel:'Tag', emptyLabel:'No tags yet'});
+  fillTagSelect($('#boardTagSel'), boardTags, S.boardTag, {allLabel:'Board'});
   if(saved && !S.flash){
     const restore = ()=>scrollers.forEach((e,i)=>{ if(!e.hidden && saved[i] && e.scrollTop!==saved[i]) e.scrollTop = saved[i]; });
     restore(); requestAnimationFrame(restore);
   }
+  if(focusKey && (!document.activeElement || document.activeElement===document.body)) restoreFocus(focusKey);
   applyFlash();
 }
 
@@ -1215,6 +1351,8 @@ function applyFlash(){
   el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
 }
 
+/* Header stats, the board tab bar and the add buttons. The tab bar is rebuilt only when what it shows has changed. */
+let lastTabsSignature = '';
 function renderChrome(b, groups){
   const isFolders = !!b && b.kind==='folders';
   const isFav = isFavKind(b);
@@ -1225,94 +1363,104 @@ function renderChrome(b, groups){
     else { const ss = Model.sectionsOf(b.id); stats = ss.length+' sections · '+ss.reduce((n,s)=>n+Model.cardsIn(s.id).length,0)+' cards'; }
   }
   $('#stats').textContent = stats;
-  const tc = (S.tag && !S.q && ready()) ? tagCounts() : null;
-  const badge = (n, what)=> n ? h('span',{class:'n',title:n+' '+what,text:String(n)}) : null;
-  const tabs = $('#tabs'); tabs.replaceChildren();
-  const favTab = x=>{
+
+  const tagCountsNow = (S.tag && !S.q && ready()) ? tagCounts() : null;
+  const tabSpecs = [{board:FAV_BOARD,fav:true}, ...Model.boardsSorted().map(x=>({board:x,fav:x.kind==='favs'}))].map(({board:x,fav})=>{
     const active = !!b && b.id===x.id;
-    const n = groups ? favMatchCount(x.id) : (tc ? favTagCount(x.id) : 0);
-    return h('div',{class:'tab fav'+(active?' on':'')},
-      h('button',{class:'tab-main',role:'tab','aria-selected':String(active),onclick:()=>selectBoard(x.id)}, ic(active?'starFill':'star',14), x.name||'Fav', badge(n, groups?'matches':'with this tag')),
-      (active && x.id!==FAV_ID) ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:x.id})}, ic('edit',13)) : null);
-  };
-  tabs.append(favTab(FAV_BOARD));
-  Model.boardsSorted().forEach(x=>{
-    if(x.kind==='favs'){ tabs.append(favTab(x)); return; }
-    const active = b && x.id===b.id;
-    const n = groups ? (groups.get(x.id)||[]).length : (tc ? (tc.per.get(x.id)||0) : 0);
-    tabs.append(h('div',{class:'tab'+(active?' on':'')},
-      h('button',{class:'tab-main',role:'tab','aria-selected':String(!!active),onclick:()=>selectBoard(x.id)}, ic(x.kind==='folders'?'folder':'board',14), x.name||'Untitled', badge(n, groups?'matches':'cards with this tag')),
-      active ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:x.id})}, ic('edit',13)) : null));
-  });
-  tabs.append(h('div',{class:'tab add'}, h('button',{class:'tab-main',onclick:()=>{ if(!S.store) return toast('Still loading…'); openBoardEditor({}); }}, ic('plus',14),'Board')));
-  const hasB = !!b;
-  $('#btnSection').hidden = !hasB || isFolders || isFav;
-  $('#btnCard').hidden = !hasB || isFolders || isFav;
-  $('#btnFolder').hidden = !hasB || !isFolders;
+    const badge = fav
+      ? (groups ? favMatchCount(x.id) : (tagCountsNow ? favTagCount(x.id) : 0))
+      : (groups ? (groups.get(x.id)||[]).length : (tagCountsNow ? (tagCountsNow.per.get(x.id)||0) : 0));
+    // board filter: a board matches if it carries the tag; a favourites tab matches if it shows a board that does
+    const boardTagged = !!S.boardTag && (fav ? Model.favBoards(x.id).some(bd=>hasTag(bd,S.boardTag)) : hasTag(x,S.boardTag));
+    return {id:x.id, name:x.name||(fav?'Fav':'Untitled'), kind:x.kind, fav, active, badge, boardTagged};
+  }).filter(t=> (!S.boardTag || t.boardTagged) && (groups ? t.badge>0 : (tagCountsNow ? t.badge>0 : true)));   // searching or filtering: only boards with results are shown
+  const signature = JSON.stringify([!!groups, !!tagCountsNow, !!S.boardTag, tabSpecs]);
+  if(signature!==lastTabsSignature){
+    lastTabsSignature = signature;
+    const tabEl = t=>{
+      const badgeEl = t.badge ? h('span',{class:'n',title:t.badge+' '+(groups?'matches':(t.fav?'with this tag':'cards with this tag')),text:String(t.badge)}) : null;
+      const icon = t.fav ? ic(t.active?'starFill':'star',14) : ic(t.kind==='folders'?'folder':'board',14);
+      const editable = t.active && t.id!==FAV_ID;
+      return h('div',{class:'tab'+(t.fav?' fav':'')+(t.active?' on':'')},
+        h('button',{class:'tab-main','data-fk':'tab:'+t.id,'aria-current':t.active?'page':null,onclick:()=>selectBoard(t.id)}, icon, t.name, badgeEl),
+        editable ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:t.id})}, ic('edit',13)) : null);
+    };
+    const tabs = $('#tabs');
+    const addTab = (groups || tagCountsNow || S.boardTag) ? null : h('div',{class:'tab add'}, h('button',{class:'tab-main',onclick:()=>{ if(!S.store) return toast('Still loading…'); openBoardEditor({}); }}, ic('plus',14),'Board'));
+    tabs.replaceChildren(...tabSpecs.map(tabEl), ...(addTab ? [addTab] : []));
+  }
+  const hasBoard = !!b;
+  $('#btnSection').hidden = !hasBoard || isFolders || isFav;
+  $('#btnCard').hidden = !hasBoard || isFolders || isFav;
+  $('#btnFolder').hidden = !hasBoard || !isFolders;
 }
 
-/* ---------- free-form board ---------- */
 /* ---------- tag filter (one tag at a time; tap again to clear) ---------- */
 const tagKey = t => String(t||'').trim().toLowerCase();
-/* every tag has its own colour: Personal = light yellow, Clinic = light blue, the rest get a stable pastel */
-const TAG_FIXED = {personal:'#8A5A3C', clinic:'#3b82f6'};          // base hues: Personal = walnut, Clinic = blue (shown as a very light tint)
-const TAG_PALETTE = ['#d4508f','#2fa66a','#7a5ad8','#e0883a','#14a38b','#b44fb4','#8a9a2f','#d85a5a','#9b6bd9','#5f9a54','#e0644a','#b8935a'];
-const tagHash = k => { let n = 0; for(const ch of k) n = (n*31 + ch.charCodeAt(0)) >>> 0; return n; };
+/* Tags take their colours from the app's jewel palette (--c0 … --c7) and are assigned automatically: each tag gets
+   the least-used jewel (onyx last), starting from the one its name hashes to, so colours spread evenly. Personal and
+   Clinic keep a fixed jewel. */
+const TAG_FIXED = {personal:'c4', clinic:'c1'};
+const hashString = text => { let n = 0; for(const ch of String(text)) n = (n*31 + ch.charCodeAt(0)) >>> 0; return n; };   // stable pseudo-random number
+function pickTagColor(key, usage){
+  const lowest = Math.min(...COLORS.map(c=>usage.get(c)||0));
+  const leastUsed = COLORS.filter(c=>(usage.get(c)||0)===lowest);
+  const preferred = leastUsed.filter(c=>c!=='c7');
+  const options = preferred.length ? preferred : leastUsed;
+  return options[hashString(key) % options.length];
+}
 let _tagMap = null, _tagSrc = [null,null];
-/* each tag gets a free hue: the one its name hashes to, or the next unused one if that is taken */
 function tagColorMap(){
   if(_tagMap && _tagSrc[0]===S.cards && _tagSrc[1]===S.boards) return _tagMap;
-  const keys = [...knownTagMap().keys()].sort(), used = new Set(), map = new Map();
-  keys.forEach(k=>{
-    if(TAG_FIXED[k]){ map.set(k,TAG_FIXED[k]); return; }
-    let i = tagHash(k) % TAG_PALETTE.length, g = 0;
-    while(used.has(i) && g++ < TAG_PALETTE.length) i = (i+1) % TAG_PALETTE.length;
-    used.add(i); map.set(k,TAG_PALETTE[i]);
-  });
+  const keys = [...knownTagMap().keys()].sort(), usage = new Map(), map = new Map();
+  const assign = (k,c)=>{ map.set(k,c); usage.set(c,(usage.get(c)||0)+1); };
+  keys.filter(k=>TAG_FIXED[k]).forEach(k=>assign(k,TAG_FIXED[k]));
+  keys.filter(k=>!TAG_FIXED[k]).forEach(k=>assign(k,pickTagColor(k,usage)));
   _tagMap = map; _tagSrc = [S.cards, S.boards]; return map;
 }
+/* CSS colour for a tag label */
 function tagColors(label){
-  const k = tagKey(label); if(TAG_FIXED[k]) return TAG_FIXED[k];
-  const map = tagColorMap(); if(map.has(k)) return map.get(k);
-  const usedIdx = new Set([...map.values()].map(v=>TAG_PALETTE.indexOf(v)));      // a tag still being typed
-  let i = tagHash(k) % TAG_PALETTE.length, g = 0;
-  while(usedIdx.has(i) && g++ < TAG_PALETTE.length) i = (i+1) % TAG_PALETTE.length;
-  return TAG_PALETTE[i];
+  const key = tagKey(label), map = tagColorMap();
+  if(map.has(key)) return 'var(--'+map.get(key)+')';
+  if(TAG_FIXED[key]) return 'var(--'+TAG_FIXED[key]+')';
+  const usage = new Map(); map.forEach(c=>usage.set(c,(usage.get(c)||0)+1));       // a tag still being typed
+  return 'var(--'+pickTagColor(key,usage)+')';
 }
 /* soft tint of the hue (like the original tags) with neutral text, so tags never overpower the card */
 const tagStyle = label => { const c = tagColors(label); return '--tg-bg:color-mix(in srgb,'+c+' 17%,#fff);--tg-bg2:color-mix(in srgb,'+c+' 30%,#fff);--tg-base:'+c; };
 const hasTag = (c,key) => (c.tags||[]).some(t=>tagKey(t)===key);
-function tagsFor(){
-  if(!ready()) return [];
-  const m = new Map();
-  const count = x=>{
+/* Two separate filters share one tag list: the header filter works on CARDS (S.tag), the filter beside the board tabs
+   works on BOARDS (S.boardTag). Each dropdown lists only the tags used on its own kind of item. */
+function tagListFor(items){
+  const byKey = new Map();
+  items.forEach(item=>{
     const seen = new Set();
-    (x.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=m.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; m.set(k,e); });
-  };
-  S.cards.forEach(c=>{ if(S.sections.has(c.sectionId)) count(c); });
-  S.boards.forEach(b=>{ if(b.kind!=='favs') count(b); });          // boards share the same tag list
-  return [...m.values()].sort((a,b)=>cmp(a.label,b.label));
+    (item.tags||[]).forEach(t=>{ const k=tagKey(t); if(!k || seen.has(k)) return; seen.add(k); const e=byKey.get(k)||{key:k,label:String(t).trim(),n:0}; e.n++; byKey.set(k,e); });
+  });
+  return [...byKey.values()].sort((a,b)=>cmp(a.label,b.label));
 }
-function renderTagSelect(tags){
-  const sel = $('#tagSel'); if(!sel) return;
-  sel.hidden = false;
-  if(!tags.length){ sel.replaceChildren(h('option',{value:'',text:'No tags yet'})); sel.disabled = true; sel.value = ''; sel.classList.remove('on'); return; }
+const cardTagList = () => ready() ? tagListFor([...S.cards.values()].filter(c=>S.sections.has(c.sectionId))) : [];
+const boardTagList = () => ready() ? tagListFor([...S.boards.values()].filter(b=>b.kind!=='favs')) : [];
+function fillTagSelect(sel, tags, selected, {allLabel, emptyLabel}){
+  if(!sel) return;
+  sel.hidden = !tags.length && !emptyLabel;            // no emptyLabel: hide the dropdown until a tag exists
+  if(!tags.length){ sel.replaceChildren(h('option',{value:'',text:emptyLabel||allLabel})); sel.disabled = true; sel.value = ''; sel.classList.remove('on'); return; }
   sel.disabled = false;
-  sel.replaceChildren(h('option',{value:'',text:'All tags'}), ...tags.map(t=>h('option',{value:t.key,text:t.label+' ('+t.n+')'})));
-  sel.value = S.tag || '';
-  sel.classList.toggle('on', !!S.tag);
+  sel.replaceChildren(h('option',{value:'',text:allLabel}), ...tags.map(t=>h('option',{value:t.key,text:t.label+' ('+t.n+')'})));
+  sel.value = selected || '';
+  sel.classList.toggle('on', !!selected);
 }
 function tagCounts(){
   const per = new Map();
   S.cards.forEach(c=>{ const sec = S.sections.get(c.sectionId); if(!sec || !hasTag(c,S.tag)) return; const bid = boardOf(sec); per.set(bid,(per.get(bid)||0)+1); });
   return {per};
 }
-function favTagCount(id){ return Model.favCards(id).filter(c=>hasTag(c,S.tag)).length + Model.favBoards(id).filter(bd=>hasTag(bd,S.tag)).length; }
+function favTagCount(id){ return Model.favCards(id).filter(c=>hasTag(c,S.tag)).length; }   // cards only: the card filter never filters boards
 
 function favMatchCount(id){
   if(!S.q) return 0;
   id = id || FAV_ID;
-  return Model.favCards(id).filter(cardHit).length + Model.favBoards(id).filter(bd=>hit(bd.name+' '+(bd.tags||[]).join(' '))).length;
+  return Model.favCards(id).filter(cardHit).length + Model.favBoards(id).filter(boardHit).length;
 }
 
 /* ---------- Favourites board: cards from every board; tap = open the link in a new tab ---------- */
@@ -1324,7 +1472,7 @@ function favColorMap(cards){
   const use = new Map(TILE_COLORS.map(k=>[k,0])), out = new Map();
   cards.forEach(c=>{ if(TILE_COLORS.includes(c.favColor)){ out.set(c.id,c.favColor); use.set(c.favColor,use.get(c.favColor)+1); } });   // colours you picked
   [...cards].filter(c=>!out.has(c.id)).sort((a,b)=>String(a.id).localeCompare(String(b.id))).forEach(c=>{
-    let n = 0; for(const ch of String(c.id)) n = (n*31 + ch.charCodeAt(0)) >>> 0;
+    const n = hashString(c.id);
     const min = Math.min(...use.values());
     const cand = TILE_COLORS.filter(k=>use.get(k)===min), pool = cand.filter(k=>k!=='c7');
     const arr = pool.length ? pool : cand, pick = arr[n % arr.length];
@@ -1338,7 +1486,7 @@ function renderFavs(b){
   favsEl.replaceChildren();
   const wrap = h('div',{class:'favwrap'});
   favsEl.append(wrap);
-  if(!ready()){ wrap.append(h('div',{class:'fempty',text:'Loading…'})); return; }
+  if(!ready()){ wrap.append(loadErrorNode('fempty') || h('div',{class:'fempty',text:'Loading…'})); return; }
   const allCards = Model.favCards(fid), allBoards = Model.favBoards(fid);
   if(!allCards.length && !allBoards.length){
     wrap.append(h('div',{class:'fempty'},
@@ -1347,17 +1495,17 @@ function renderFavs(b){
     return;
   }
   const colors = favColorMap([...allBoards, ...allCards]);      // over ALL items on this board so colours don't shift when you filter
-  let boards = S.tag ? allBoards.filter(bd=>hasTag(bd,S.tag)) : allBoards;
+  let boards = S.boardTag ? allBoards.filter(bd=>hasTag(bd,S.boardTag)) : allBoards;
   let cards = S.tag ? allCards.filter(c=>hasTag(c,S.tag)) : allCards;
-  if(S.q){ boards = boards.filter(bd=>hit(bd.name+' '+(bd.tags||[]).join(' '))); cards = cards.filter(cardHit); }
+  if(S.q){ boards = boards.filter(boardHit); cards = cards.filter(cardHit); }
   if(!boards.length && !cards.length){
-    wrap.append(h('div',{class:'fempty'}, h('p',{text: S.q ? 'No favourites match “'+S.q+'”.' : 'No favourites with this tag.'})));
+    wrap.append(h('div',{class:'fempty'}, h('p',{text: S.q ? 'No favourites match “'+S.q+'”.' : 'No favourites match the selected tag.'})));
     return;
   }
   const initialOf = t => (Array.from(String(t||'').trim())[0]||'').toUpperCase();
   const tile = ({id,title,top,sub,st,main,match,tip,edit})=>{
     const longest = Math.max(0, ...String(title||'').split(/\s+/).map(w=>w.length));
-    main.append(sub ? h('div',{class:'fav-sec',text:sub}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, tx(title||'(untitled)')));
+    main.append(sub ? h('div',{class:'fav-sec',text:sub}) : null, h('div',{class:'fav-name'+(longest>=12?' xl':longest>=9?' lg':'')}, highlightIfSearching(title||'(untitled)')));
     return h('div',{class:'fav-tile'+(match?' match':''),'data-id':id,'data-st':st,'data-initial':initialOf(title),style:'--tc:var(--'+(colors.get(id)||'c0')+')'}, main,
       h('div',{class:'fav-board',title:tip||top,text:top}),
       h('div',{class:'fav-actions'}, h('button',{class:'icon-btn','aria-label':'Edit '+(title||'favourite'),title:'Edit',onclick:edit}, ic('edit',15))));
@@ -1367,7 +1515,7 @@ function renderFavs(b){
     const n = isF ? Model.foldersOf(bd.id).length : Model.sectionsOf(bd.id).length;
     const sub = n+(isF?(n===1?' folder':' folders'):(n===1?' section':' sections'));
     const main = h('button',{class:'fav-main',type:'button','aria-label':'Open board '+(bd.name||''),onclick:()=>selectBoard(bd.id)});
-    return tile({id:bd.id,title:bd.name,top:isF?'Folders':'Board',sub,st:'live',main,match:S.q&&hit(bd.name+' '+(bd.tags||[]).join(' ')),tip:'Open this board',edit:()=>openBoardEditor({id:bd.id})});
+    return tile({id:bd.id,title:bd.name,top:isF?'Folders':'Board',sub,st:'live',main,match:S.q&&boardHit(bd),tip:'Open this board',edit:()=>openBoardEditor({id:bd.id})});
   };
   const cardTile = c=>{
     const sec = S.sections.get(c.sectionId), brd = sec && S.boards.get(boardOf(sec));
@@ -1383,7 +1531,7 @@ function renderFavs(b){
   if(closed.length){
     const hitClosed = S.q && closed.some(cardHit);
     const open = S.favClosedOpen || !!hitClosed;
-    wrap.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),onclick:()=>{ S.favClosedOpen=!S.favClosedOpen; render(); }},
+    wrap.append(h('button',{class:'closed-toggle',type:'button','data-fk':'favclosed','aria-expanded':String(open),onclick:()=>{ S.favClosedOpen=!S.favClosedOpen; render(); }},
       ic('caret',12), 'Closed', h('span',{class:'cn',text:String(closed.length)})));
     if(open){ const grid = h('div',{class:'favgrid'}); closed.forEach(c=>grid.append(cardTile(c))); wrap.append(grid); }
   }
@@ -1398,23 +1546,24 @@ function cardEl(c, sec){
   const href = safeHref(c.url);
   const st = cardStatus(c);
   const hasNote = !!(c.body && c.body.trim());
-  const isMatch = S.q && hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '));
+  const isMatch = S.q && cardHit(c);
   const el = h('div',{class:'card'+(isMatch?' match':''),'data-id':c.id,'data-st':st,tabindex:'0',style:'--sc:'+secColor(sec),
       onclick:e=>{ if(e.target.closest('a')||e.target.closest('.sdot')) return; openCardEditor({id:c.id}); },
-      onkeydown:e=>{ if((e.key==='Enter'||e.key===' ') && e.target===el){ e.preventDefault(); openCardEditor({id:c.id}); } }},
+      onkeydown:onActivateKey(()=>openCardEditor({id:c.id}))},
     h('div',{class:'c-main'},
       h('div',{class:'c-top'},
-        h('button',{class:'sdot',type:'button','data-s':st,title:STATUS[st].label+' — tap to change','aria-label':'Status: '+STATUS[st].label+'. Tap to change.',
+        h('button',{class:'sdot',type:'button','data-s':st,'data-fk':'st:'+c.id,title:STATUS[st].label+' — tap to change','aria-label':'Status: '+STATUS[st].label+'. Tap to change.',
           onclick:e=>{ e.stopPropagation(); cycleStatus(c); }}),
-        h('div',{class:'c-title'}, tx(c.title||'(untitled)')),
+        h('div',{class:'c-title'}, highlightIfSearching(c.title||'(untitled)')),
         c.fav===true ? h('span',{class:'c-fav',title:'On Favourites','aria-label':'On Favourites'}, ic('starFill',13)) : null,
         hasNote ? h('span',{class:'c-note',title:'Has a note — open the card to read it','aria-label':'Has a note'}, ic('note',14)) : null,
         href ? h('a',{class:'icon-btn c-open',href,target:'_blank',rel:'noopener noreferrer',title:'Open link','aria-label':'Open link for '+(c.title||'card')+' (new tab)'}, ic('external',16)) : null),
-      (c.tags&&c.tags.length) ? h('div',{class:'tags'}, c.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, tx(t)))) : null
+      (c.tags&&c.tags.length) ? h('div',{class:'tags'}, c.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, highlightIfSearching(t)))) : null
     ));
   return el;
 }
 
+/* ---------- free-form board ---------- */
 /* Column layout for sections: measure every section at the final column width, then fill column 1 top to bottom
    in A–Z order until it holds its fair share of the height, then column 2, and so on. No column is ever empty. */
 const LAYOUT = {els:[], w:0};
@@ -1453,7 +1602,7 @@ if(planeRO) planeRO.observe(plane);
 function renderBoard(b){
   LAYOUT.els = [];
   plane.replaceChildren();
-  if(!ready()){ plane.append(h('div',{class:'empty'},h('p',{text:'Loading your map…'}))); return; }
+  if(!ready()){ plane.append(loadErrorNode('empty') || h('div',{class:'empty'},h('p',{text:'Loading your map…'}))); return; }
   if(!b){
     plane.append(h('div',{class:'empty'},h('h2',{text:'No boards yet'}),
       h('button',{class:'btn primary',onclick:()=>openBoardEditor({})}, ic('plus',14),'New board')));
@@ -1471,38 +1620,38 @@ function renderBoard(b){
   secs.forEach(sec=>{
     const all = Model.cardsIn(sec.id);
     const tagged = S.tag ? all.filter(c=>hasTag(c,S.tag)) : all;
-    const secHit = !!q && hit((sec.name||'')+' '+(sec.description||'')+' '+(sec.url||''));
-    const shown = (q && !secHit) ? tagged.filter(cardHit) : tagged;      // searching: only matching cards
-    if(q && !secHit && !shown.length) return;                            // …and only sections that have a match
+    const secHit = !!q && matchesQuery(textOf(sec.name,sec.description,sec.url));
+    const shown = q ? tagged.filter(cardHit) : tagged;                   // searching: only matching cards, even inside a matching section
+    if(!shown.length && (S.tag || (q && !secHit))) return;               // …and only sections that have a result
     rendered++;
     const href = safeHref(sec.url);
-    const list = h('div',{class:'s-cards','data-section':sec.id,'data-empty':S.tag?'No cards with this tag':'No cards yet'});
+    const list = h('div',{class:'s-cards','data-section':sec.id,'data-empty':q?'No matching cards':'No cards yet'});
     const live = shown.filter(c=>cardStatus(c)!=='closed'), closed = shown.filter(c=>cardStatus(c)==='closed');
     live.forEach(c=>list.append(cardEl(c,sec)));
     if(closed.length){
       const hitClosed = q && closed.some(cardHit);
       const open = S.closedOpen.has(sec.id) || !!hitClosed;
-      list.append(h('button',{class:'closed-toggle',type:'button','aria-expanded':String(open),
+      list.append(h('button',{class:'closed-toggle',type:'button','data-fk':'closed:'+sec.id,'aria-expanded':String(open),
         onclick:()=>{ if(S.closedOpen.has(sec.id)) S.closedOpen.delete(sec.id); else S.closedOpen.add(sec.id); render(); }},
         ic('caret',12), 'Closed', h('span',{class:'cn',text:String(closed.length)})));
       if(open){ const box = h('div',{class:'closed-box'}); closed.forEach(c=>box.append(cardEl(c,sec))); list.append(box); }
     }
-    const filtered = !!(S.tag || (q && !secHit));
-    const el = h('div',{class:'section'+(secHit?' match':'')+(S.tag&&!shown.length?' dim':''),'data-id':sec.id,
+    const filtered = !!(S.tag || q);
+    const el = h('div',{class:'section'+(secHit?' match':''),'data-id':sec.id,
         style:'--sc:'+secColor(sec)},
       h('div',{class:'s-head'},
-        h('button',{class:'s-title',title:'Edit section',onclick:()=>openSectionEditor({id:sec.id})}, tx(sec.name||'Untitled')),
+        h('button',{class:'s-title',title:'Edit section',onclick:()=>openSectionEditor({id:sec.id})}, highlightIfSearching(sec.name||'Untitled')),
         h('span',{class:'s-count',text:filtered ? shown.length+'/'+all.length : String(all.length)}),
         href ? h('a',{class:'icon-btn',href,target:'_blank',rel:'noopener noreferrer','aria-label':'Open app'}, ic('external',15)) : null,
         h('button',{class:'icon-btn','aria-label':'Add card with options',title:'Add card',onclick:()=>openCardEditor({sectionId:sec.id})}, ic('plus',16))),
-      sec.description ? h('div',{class:'s-desc'}, tx(sec.description)) : null,
+      sec.description ? h('div',{class:'s-desc'}, highlightIfSearching(sec.description)) : null,
       list);
     secEls.push(el);
   });
   if(secEls.length) layoutSections(secEls);
-  if(q && !rendered){
+  if((q || S.tag) && !rendered){
     plane.append(h('div',{class:'empty'},  h('h2',{text:'No matches'}),
-      h('p',{text:'Nothing on this board matches “'+q+'”.'})));
+      h('p',{text:q ? 'Nothing on this board matches “'+q+'”.' : 'No cards on this board have this tag.'})));
   }
 }
 
@@ -1511,7 +1660,7 @@ function renderFolders(b){
   foldersEl.replaceChildren();
   const wrap = h('div',{class:'ftree'});
   foldersEl.append(wrap);
-  if(!ready()){ wrap.append(h('div',{class:'fempty',text:'Loading…'})); return; }
+  if(!ready()){ wrap.append(loadErrorNode('fempty') || h('div',{class:'fempty',text:'Loading…'})); return; }
   const {byId, kids} = Model.tree(b.id);
   const roots = kids.get('_root')||[];
   if(!roots.length){
@@ -1524,8 +1673,8 @@ function renderFolders(b){
   Model.contentsOf(b.id).forEach(c=>{ if(!byId.has(c.folderId)) return; if(!items.has(c.folderId)) items.set(c.folderId,[]); items.get(c.folderId).push(c); });
   items.forEach(a=>a.sort(byName));
   // searching: keep only folders / items that match, plus the folders leading to them
-  const selfHit = f => hit(f.name+' '+(f.note||''));
-  const itemHit = it => hit(it.name+' '+(it.note||''));
+  const selfHit = f => matchesQuery(textOf(f.name,f.note));
+  const itemHit = it => matchesQuery(textOf(it.name,it.note));
   const vis = new Map();
   const nodeVisible = f=>{
     if(!S.q) return true;
@@ -1552,29 +1701,29 @@ function renderFolders(b){
 
   const toggle = f=>{ if(S.collapsed.has(f.id)) S.collapsed.delete(f.id); else S.collapsed.add(f.id); render(); };
   const itemEl = it=>{
-    const row = h('div',{class:'irow'+(S.q&&hit(it.name+' '+(it.note||''))?' match':''),'data-id':it.id,tabindex:'0',title:'Edit item',
+    const row = h('div',{class:'irow'+(S.q&&itemHit(it)?' match':''),'data-id':it.id,tabindex:'0',title:'Edit item',
         onclick:()=>openContentSheet({id:it.id}),
-        onkeydown:e=>{ if(e.key==='Enter') openContentSheet({id:it.id}); }},
+        onkeydown:onActivateKey(()=>openContentSheet({id:it.id}))},
       h('span',{class:'di'}, ic('doc',15)),
-      h('span',{class:'in'}, tx(it.name||'(unnamed)'), it.note ? h('span',{class:'inote'}, tx(it.note)) : null));
+      h('span',{class:'in'}, highlightIfSearching(it.name||'(unnamed)'), it.note ? h('span',{class:'inote'}, highlightIfSearching(it.note)) : null));
     return h('div',{class:'tnode item'}, row);
   };
   const nodeEl = (f, isRoot)=>{
     const ch = (kids.get(f.id)||[]).filter(nodeVisible);
-    const its = (items.get(f.id)||[]).filter(it=>!S.q || selfHit(f) || itemHit(it));
+    const its = (items.get(f.id)||[]).filter(it=>!S.q || itemHit(it));      // searching: only matching items
     const has = ch.length>0 || its.length>0;
     const open = has && (S.q ? true : !S.collapsed.has(f.id));
     const st = stat(f);
     const parts = [];
     if(st.fc) parts.push(st.fc+' folder'+(st.fc===1?'':'s'));
     if(st.ic) parts.push(st.ic+' item'+(st.ic===1?'':'s'));
-    const row = h('div',{class:'frow'+(S.q&&hit(f.name+' '+(f.note||''))?' match':''),'data-id':f.id,tabindex:'0',
+    const row = h('div',{class:'frow'+(S.q&&selfHit(f)?' match':''),'data-id':f.id,tabindex:'0',
         onclick:e=>{ if(e.target.closest('.acts')) return; if(has) toggle(f); },
-        onkeydown:e=>{ if(e.key==='Enter' && e.target===row && has) toggle(f); }},
+        onkeydown:onActivateKey(()=>{ if(has) toggle(f); })},
       h('span',{class:'caret'+(has?(open?' open':''):' leaf'),'aria-hidden':'true'}, ic('caret',14)),
       h('span',{class:'fi'+(has?'':' leaf')}, ic(open?'folderOpen':'folder',18)),
-      h('span',{class:'nm'+(f.note?' fit':''),title:Model.folderPath(f).map(x=>x.name).join(' / ')}, tx(f.name||'Untitled')),
-      f.note ? h('span',{class:'inote',title:f.note}, tx(f.note)) : null,
+      h('span',{class:'nm'+(f.note?' fit':''),title:Model.folderPath(f).map(x=>x.name).join(' / ')}, highlightIfSearching(f.name||'Untitled')),
+      f.note ? h('span',{class:'inote',title:f.note}, highlightIfSearching(f.note)) : null,
       parts.length ? h('span',{class:'cnt',text:parts.join(' · ')}) : null,
       h('span',{class:'acts'},
         h('button',{class:'icon-btn','aria-label':'Add content',title:'Add content',onclick:e=>{ e.stopPropagation(); openContentSheet({folderId:f.id}); }}, ic('filePlus',16)),
@@ -1595,43 +1744,55 @@ function renderFolders(b){
 }
 
 /* ---------- universal search ---------- */
-function terms(){ return S.q.split(/\s+/).filter(Boolean); }
-function hit(text){ const t=(text||'').toLowerCase(); return terms().every(w=>t.includes(w)); }
-function hl(text){
+/* The query is split into words (and the highlight pattern built) once per query, not once per item. */
+let termsQuery = null, termsCache = [], highlightPattern = null;
+function searchTerms(){
+  if(termsQuery!==S.q){
+    termsQuery = S.q;
+    termsCache = S.q.split(/\s+/).filter(Boolean);
+    highlightPattern = termsCache.length
+      ? new RegExp('('+termsCache.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi')
+      : null;
+  }
+  return termsCache;
+}
+function matchesQuery(text){ const t=String(text||'').toLowerCase(); return searchTerms().every(w=>t.includes(w)); }
+function highlight(text){
   text = String(text==null?'':text);
-  const ws = terms(); if(!ws.length || !text) return [text];
-  const re = new RegExp('('+ws.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')','gi');
-  return text.split(re).map((p,i)=> i%2 ? h('mark',{text:p}) : p);
+  searchTerms();                                           // refresh the cached pattern for the current query
+  if(!highlightPattern || !text) return [text];
+  return text.split(highlightPattern).map((part,i)=> i%2 ? h('mark',{text:part}) : part);
 }
 function snippet(text){
   text = String(text||''); if(!text) return '';
   const low = text.toLowerCase(); let idx = -1;
-  for(const w of terms()){ const i=low.indexOf(w); if(i>=0){ idx=i; break; } }
+  for(const w of searchTerms()){ const i=low.indexOf(w); if(i>=0){ idx=i; break; } }
   if(idx<0) return text.slice(0,160);
   const s = Math.max(0, idx-50);
   return (s>0?'…':'')+text.slice(s, s+180);
 }
 
+/* Every match on every board, grouped by board id. */
 function searchAll(){
   const groups = new Map();
   const add = (bid,item)=>{ if(!groups.has(bid)) groups.set(bid,[]); groups.get(bid).push(item); };
-  S.boards.forEach(b=>{ if(b.kind!=='favs' && hit(b.name+' '+(b.tags||[]).join(' '))) add(b.id,{kind:'board',id:b.id,title:b.name}); });
+  S.boards.forEach(b=>{ if(b.kind!=='favs' && boardHit(b)) add(b.id,{kind:'board',id:b.id,title:b.name}); });
   S.sections.forEach(s=>{
     const bid = boardOf(s); if(!S.boards.has(bid)) return;
-    if(hit((s.name||'')+' '+(s.description||'')+' '+(s.url||''))) add(bid,{kind:'section',id:s.id,title:s.name,body:s.description,url:s.url});
+    if(matchesQuery(textOf(s.name,s.description,s.url))) add(bid,{kind:'section',id:s.id,title:s.name,body:s.description,url:s.url});
   });
   S.folders.forEach(f=>{
     if(!S.boards.has(f.boardId)) return;
-    if(hit(f.name+' '+(f.note||''))){ const path=Model.folderPath(f).slice(0,-1).map(x=>x.name).join(' / '); add(f.boardId,{kind:'folder',id:f.id,title:f.name,body:f.note,sub:path?'in '+path:'top level'}); }
+    if(matchesQuery(textOf(f.name,f.note))){ const path=Model.folderPath(f).slice(0,-1).map(x=>x.name).join(' / '); add(f.boardId,{kind:'folder',id:f.id,title:f.name,body:f.note,sub:path?'in '+path:'top level'}); }
   });
   S.contents.forEach(c=>{
     const f = S.folders.get(c.folderId); if(!f || !S.boards.has(f.boardId)) return;
-    if(hit(c.name+' '+(c.note||''))) add(f.boardId,{kind:'item',id:c.id,folderId:f.id,title:c.name,body:c.note,sub:'in '+Model.folderPath(f).map(x=>x.name).join(' / ')});
+    if(matchesQuery(textOf(c.name,c.note))) add(f.boardId,{kind:'item',id:c.id,folderId:f.id,title:c.name,body:c.note,sub:'in '+Model.folderPath(f).map(x=>x.name).join(' / ')});
   });
   S.cards.forEach(c=>{
     const s = S.sections.get(c.sectionId); if(!s) return;
     const bid = boardOf(s); if(!S.boards.has(bid)) return;
-    if(hit([c.title,c.body,c.url,(c.tags||[]).join(' ')].join(' '))) add(bid,{kind:'card',id:c.id,title:c.title,sub:'in '+(s.name||'Untitled'),body:c.body,tags:c.tags,url:c.url});
+    if(cardHit(c)) add(bid,{kind:'card',id:c.id,title:c.title,sub:'in '+(s.name||'Untitled'),body:c.body,tags:c.tags,url:c.url});
   });
   return groups;
 }
@@ -1648,12 +1809,12 @@ function goTo(bid, item){
   selectBoard(bid);
 }
 
-function renderResults(){
+/* `groups` is the searchAll() result render() already computed for this query. */
+function renderResults(groups){
   resultsEl.replaceChildren();
   const wrap = h('div',{class:'res-wrap'});
   resultsEl.append(wrap);
-  if(!ready()){ wrap.append(h('div',{class:'res-none',text:'Loading…'})); return; }
-  const groups = searchAll();
+  if(!ready()){ wrap.append(loadErrorNode('res-none') || h('div',{class:'res-none',text:'Loading…'})); return; }
   let total = 0; groups.forEach(a=>total+=a.length);
   if(!total){ wrap.append(h('div',{class:'res-none',text:'Nothing found on any board for “'+S.q+'”.'})); return; }
   wrap.append(h('div',{class:'res-head',text:total+' result'+(total===1?'':'s')+' across '+groups.size+' board'+(groups.size===1?'':'s')}));
@@ -1666,13 +1827,13 @@ function renderResults(){
     for(const it of items){
       if(shown++>=CAP) break;
       const href = it.url ? safeHref(it.url) : null;
-      list.append(h('div',{class:'res',tabindex:'0',onclick:e=>{ if(e.target.closest('a')) return; goTo(b.id,it); },onkeydown:e=>{ if(e.key==='Enter') goTo(b.id,it); }},
+      list.append(h('div',{class:'res',tabindex:'0',onclick:e=>{ if(e.target.closest('a')) return; goTo(b.id,it); },onkeydown:onActivateKey(()=>goTo(b.id,it))},
         h('span',{class:'k',text:it.kind}),
         h('div',{style:'min-width:0;flex:1'},
-          h('div',{class:'t'}, hl(it.title||'(untitled)')),
+          h('div',{class:'t'}, highlight(it.title||'(untitled)')),
           it.sub ? h('div',{class:'s'}, it.sub) : null,
-          it.body ? h('div',{class:'b'}, hl(snippet(it.body))) : null,
-          (it.tags&&it.tags.length) ? h('div',{class:'tags'}, it.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, hl(t)))) : null,
+          it.body ? h('div',{class:'b'}, highlight(snippet(it.body))) : null,
+          (it.tags&&it.tags.length) ? h('div',{class:'tags'}, it.tags.map(t=>h('span',{class:'tag',style:tagStyle(t)}, highlight(t)))) : null,
           it.url ? h('div',{class:'c-meta'}, href ? h('a',{href,target:'_blank',rel:'noopener noreferrer',title:it.url}, linkText(it.url), ic('external',11)) : linkText(it.url)) : null)));
     }
     wrap.append(h('div',{class:'res-group'},
@@ -1683,26 +1844,57 @@ function renderResults(){
 }
 
 /* =====================================================================
-   Header wiring
+   Header wiring, keyboard shortcuts, banner and sync status
    ===================================================================== */
 (function buildHeader(){
-  const sw = $('#searchWrap');
-  sw.append(ic('search',15));
-  qInput = h('input',{type:'search',placeholder:'Search all boards…','aria-label':'Search all boards'});
-  let t; qInput.addEventListener('input',()=>{ clearTimeout(t); t=setTimeout(()=>{ S.q=qInput.value.trim().toLowerCase(); S.matchIdx=-1; if(!S.q) S.listView=false; render(); if(S.q && !S.listView) stepMatch(1); },150); });
-  qInput.addEventListener('keydown',e=>{ if(e.key==='Escape'){ clearSearch(); render(); } });
-  sw.append(qInput);
-  sw.append(h('button',{class:'sclear',type:'button','aria-label':'Clear search',title:'Clear search',
+  const searchWrap = $('#searchWrap');
+  searchWrap.append(ic('search',15));
+  qInput = h('input',{type:'search',placeholder:'Search all boards…','aria-label':'Search all boards','aria-keyshortcuts':'/'});
+  // The query is applied ~150 ms after typing stops. Enter applies it at once and jumps to the next match
+  // (Shift+Enter: previous); typing alone never scrolls the page.
+  let searchTimer;
+  const applySearch = ()=>{
+    const q = qInput.value.trim().toLowerCase();
+    if(q===S.q) return;
+    S.q = q; S.matchIdx = -1; if(!q) S.listView = false;
+    render();
+  };
+  qInput.addEventListener('input',()=>{ clearTimeout(searchTimer); searchTimer = setTimeout(applySearch,150); });
+  qInput.addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ clearTimeout(searchTimer); clearSearch(); render(); }
+    else if(e.key==='Enter'){
+      e.preventDefault(); clearTimeout(searchTimer); applySearch();
+      if(S.q && !S.listView) stepMatch(e.shiftKey?-1:1);
+    }
+  });
+  searchWrap.append(qInput);
+  searchWrap.append(h('button',{class:'sclear',type:'button','aria-label':'Clear search',title:'Clear search',
     onclick:()=>{ clearSearch(); render(); qInput.focus(); }}, ic('close',14)));
-  const guard = fn => ()=>{ if(!S.store) return toast('Still loading…'); fn(); };
+  const whenLoaded = fn => ()=>{ if(!S.store) return toast('Still loading…'); fn(); };
   $('#actions').append(
-    h('select',{id:'tagSel',class:'tagsel',hidden:true,'aria-label':'Filter by tag (all boards)',title:'Filter by tag (all boards)',onchange:e=>{ S.tag = e.target.value || null; S.matchIdx=-1; render(); }}),
+    h('select',{id:'tagSel',class:'tagsel',hidden:true,'aria-label':'Filter cards by tag (all boards)',title:'Filter cards by tag (all boards)',onchange:e=>{ S.tag = e.target.value || null; S.matchIdx=-1; render(); }}),
+    h('select',{id:'boardTagSel',class:'tagsel',hidden:true,'aria-label':'Filter boards by tag',title:'Filter boards by tag',onchange:e=>{ S.boardTag = e.target.value || null; S.matchIdx=-1; render(); }}),
     h('div',{class:'act-btns'},
-      h('button',{class:'btn',id:'btnSection',hidden:true,onclick:guard(()=>openSectionEditor({}))}, ic('plus',14),'Section'),
-      h('button',{class:'btn primary',id:'btnCard',hidden:true,onclick:guard(()=>openCardEditor({}))}, ic('plus',14),'Card'),
-      h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:guard(()=>openFolderSheet({}))}, ic('plus',14),'Folder'))
+      h('button',{class:'btn',id:'btnSection',hidden:true,onclick:whenLoaded(()=>openSectionEditor({}))}, ic('plus',14),'Section'),
+      h('button',{class:'btn primary',id:'btnCard',hidden:true,onclick:whenLoaded(()=>openCardEditor({}))}, ic('plus',14),'Card'),
+      h('button',{class:'btn primary',id:'btnFolder',hidden:true,onclick:whenLoaded(()=>openFolderSheet({}))}, ic('plus',14),'Folder'))
   );
 })();
+
+/* Esc closes the open sheet, otherwise clears the search.  "/" or Ctrl/⌘+K focuses the search box. */
+document.addEventListener('keydown', e=>{
+  const target = e.target;
+  const typing = !!target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable);
+  if(e.key==='Escape'){
+    if(sheetClose) closeSheet();
+    else if(S.q && target!==qInput){ clearSearch(); render(); }
+    return;
+  }
+  if(sheetClose || !qInput) return;
+  const slash = e.key==='/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey;
+  const findKey = (e.metaKey||e.ctrlKey) && !e.altKey && String(e.key).toLowerCase()==='k';
+  if(slash || findKey){ e.preventDefault(); qInput.focus(); qInput.select(); }
+});
 
 /* arrow keys move between board tabs */
 $('#tabs').addEventListener('keydown',e=>{
@@ -1712,13 +1904,40 @@ $('#tabs').addEventListener('keydown',e=>{
   e.preventDefault(); btns[(i+(e.key==='ArrowRight'?1:-1)+btns.length)%btns.length].focus();
 });
 
-/* =====================================================================
-   Init
-   ===================================================================== */
-/* =====================================================================
-   Init  (storage)
-   ===================================================================== */
-function showBanner(msg){ const b=$('#banner'); b.textContent=msg; b.hidden=false; }
+/* ---------- banner (dismissible; optional Retry) ---------- */
+function showBanner(msg, {retry=false}={}){
+  const banner = $('#banner');
+  banner.replaceChildren(...[
+    h('span',{text:msg}),
+    retry ? h('button',{class:'btn sm',type:'button',text:'Retry',onclick:()=>location.reload()}) : null,
+    h('button',{class:'icon-btn',type:'button','aria-label':'Dismiss',title:'Dismiss',onclick:()=>{ banner.hidden = true; }}, ic('close',14))
+  ].filter(Boolean));
+  banner.hidden = false;
+}
+/* Loading failed for good: say so in the page itself (with Retry) instead of "Loading…" forever. */
+function failLoading(msg){
+  S.loadError = msg;
+  showBanner(msg,{retry:true});
+  render();
+}
+function loadErrorNode(cls){
+  return S.loadError
+    ? h('div',{class:cls}, h('p',{text:S.loadError}), h('button',{class:'btn primary',type:'button',text:'Retry',onclick:()=>location.reload()}))
+    : null;
+}
+
+/* ---------- sync status: "Offline" / "Syncing…" next to the stats line ---------- */
+function updateSyncStatus(){
+  const el = $('#sync'), dot = $('#netDot'); if(!el) return;
+  const offline = navigator.onLine===false;
+  if(dot){ const label = offline ? 'Offline' : 'Online'; dot.classList.toggle('off', offline); dot.setAttribute('aria-label',label); dot.title = label; }   // green = online, red = offline
+  const syncing = !!S.store && S.store.mode==='cloud' && Object.values(S.pending).some(Boolean);
+  el.hidden = !(offline || syncing);
+  el.textContent = offline ? (syncing ? 'Offline — changes will sync later' : 'Offline') : 'Syncing…';
+  el.classList.toggle('off', offline);
+}
+window.addEventListener('online', updateSyncStatus);
+window.addEventListener('offline', updateSyncStatus);
 
 /* =====================================================================
    PWA (single file): the icons are embedded below as PNG data — nothing is
@@ -1750,6 +1969,7 @@ function setupPWA(){
 
 (async function init(){
   try{ setupPWA(); }catch(e){}
+  updateSyncStatus();
   render();
   // Accepts either shape: my CONFIG = { FIREBASE:{…} } block, or Firebase's own `const firebaseConfig = {…}` snippet pasted as-is.
   const fc = (typeof CONFIG!=='undefined' && CONFIG.FIREBASE) || (typeof firebaseConfig!=='undefined' ? firebaseConfig : {});
@@ -1757,20 +1977,26 @@ function setupPWA(){
     showBanner('Local mode — data is saved only in this browser. Add your Firebase config at the top of this file to sync online.');
     S.store = localStore();
   } else {
-    if(typeof firebase==='undefined' || !firebase.firestore){ showBanner('Could not load Firebase. Check your internet connection and reload.'); return; }
+    if(typeof firebase==='undefined' || !firebase.firestore){ failLoading('Could not load Firebase. You may be offline — check your connection and retry.'); return; }
     try{ if(!firebase.apps.length) firebase.initializeApp(fc); }
-    catch(e){ showBanner('Firebase config problem: '+((e&&e.message)||e)); return; }
+    catch(e){ failLoading('Firebase config problem: '+((e&&e.message)||e)); return; }
     S.store = firebaseStore(firebase.firestore());
   }
-  const onErr = e=>{
-    const c = e && e.code;
-    if(c==='permission-denied') showBanner('Access denied by Firestore. In Firebase → Firestore → Rules, publish the open rules shown at the top of this file.');
-    else showBanner('Sync problem ('+((e&&(c||e.message))||'error')+'). Reload the page.');
+  const onSyncError = e=>{
+    const code = e && e.code;
+    const msg = code==='permission-denied'
+      ? 'Access denied by Firestore. In Firebase → Firestore → Rules, publish the open rules shown at the top of this file.'
+      : 'Sync problem ('+((e&&(code||e.message))||'error')+'). Reload the page.';
+    if(ready()) showBanner(msg,{retry:true}); else failLoading(msg);
   };
   COLLS.forEach(c=>{
-    S.store.subscribe(c, m=>{ S[c]=m; S.got[c]=true; scheduleRender(); }, onErr);
+    S.store.subscribe(c,
+      m=>{ S[c]=m; S.got[c]=true; scheduleRender(); },
+      onSyncError,
+      pending=>{ S.pending[c]=pending; updateSyncStatus(); });
   });
-  try{ await S.store.start(); }catch(e){ onErr(e); }
+  updateSyncStatus();
+  try{ await S.store.start(); }catch(e){ onSyncError(e); }
 })();
 </script>
 </body>
