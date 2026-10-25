@@ -164,7 +164,7 @@ main{flex:1;min-height:0;display:flex}
 .flash{animation:flash 2s ease-out}
 
 /* sections */
-.section{position:relative;min-width:0;width:100%;margin:0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.section{position:relative;min-width:0;width:100%;margin:0;background:color-mix(in srgb,var(--sc) 10%,#fff);border:1px solid color-mix(in srgb,var(--sc) 22%,var(--line));border-radius:var(--r-lg);box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden}
 .s-head{display:flex;align-items:center;gap:2px;padding:6px 6px 6px 16px;background:var(--sc);color:#fff}
 .s-title{flex:1;min-width:0;text-align:left;border:0;background:none;cursor:pointer;font:700 16px/1.2 var(--f-head);color:#fff;padding:8px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-height:44px}
 .s-count{font-size:13px;font-weight:600;color:rgba(255,255,255,.9);padding:0 6px}
@@ -180,6 +180,7 @@ main{flex:1;min-height:0;display:flex}
 .card:hover{border-color:var(--sc);background:#fff}
 .c-main{flex:1;min-width:0}
 .c-top{display:flex;align-items:flex-start;gap:6px}
+.c-top .sdot.static{margin-top:6px}
 .c-title{font-weight:600;font-size:15.5px;overflow-wrap:anywhere;flex:1;min-width:0;padding-top:2px}
 .c-note{color:var(--faint);display:inline-flex;margin-top:4px;flex:none}
 .c-open{width:36px;height:36px;margin:-6px -6px -6px 0;color:var(--accent);border-radius:50%}
@@ -230,6 +231,13 @@ main{flex:1;min-height:0;display:flex}
 
 /* favourites: solid jewel tiles */
 .favwrap{max-width:1040px;margin:0 auto;padding:8px 16px 96px}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.bpill{display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 10px 6px 6px;min-width:0}
+.bpill:hover{border-color:var(--tc)}
+.bpill-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;min-height:44px;border:0;background:none;cursor:pointer;color:var(--ink);text-align:left;padding:0}
+.bpill-dot{flex:none;width:36px;height:36px;border-radius:50%;background:var(--tc);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+.bpill-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bpill-sub{flex:none;font-size:13px;color:var(--muted)}
 .favgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:14px}
 .fav-tile{position:relative;aspect-ratio:1/1;border-radius:var(--r-xl);min-width:0;overflow:hidden;background:var(--tc);color:#fff;
   box-shadow:0 10px 22px -14px color-mix(in srgb,var(--tc) 80%,#000),0 1px 2px rgba(31,27,46,.1);
@@ -319,30 +327,47 @@ main{flex:1;min-height:0;display:flex}
 .overlay{position:fixed;inset:0;background:rgba(31,27,46,.5);display:flex;align-items:flex-end;justify-content:center;z-index:2000;touch-action:none;-webkit-user-select:none;user-select:none}
 .sheet{background:var(--panel);width:100%;max-width:560px;max-height:94%;overflow:auto;border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));box-shadow:var(--shadow);touch-action:pan-y pinch-zoom;-webkit-user-select:text;user-select:text}
 @media(min-width:640px){.overlay{align-items:center}.sheet{border-radius:var(--r-xl)}}
-.sheet h3{margin:0 0 4px;font:800 20px/1.2 var(--f-head);letter-spacing:-.01em}
+.sheet h3{margin:0 0 2px;font:800 20px/1.2 var(--f-head);letter-spacing:-.01em}
 .sheet.fit{display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 16px)}
 @supports(height:100dvh){.sheet.fit{max-height:calc(100dvh - 16px)}}
 .sheet.fit>*{flex:0 0 auto}
 .sheet:not(.fit)>*+*{margin-top:16px}
 .sheet .f,.sheet.fit .f{margin:0}
 .f>label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
-.f input[type=text],.f input[type=url],.f textarea,.f select{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);font-size:16px}
+.f input[type=text],.f input[type=url],.f textarea,.f select,.srow-p input[type=text]{width:100%;min-height:48px;padding:0 14px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);font-size:16px}
 .f textarea{padding:12px 14px;resize:vertical;min-height:88px;line-height:1.45}
-.f select{padding-right:12px}
 .f input:focus,.f textarea:focus,.f select:focus{border-color:var(--accent);background:#fff}
 .f .bad{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 6%,#fff)}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
 .seg button{flex:1 1 auto;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-weight:500}
 .seg button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,#fff);box-shadow:inset 0 0 0 1px var(--accent);font-weight:700}
-.stseg{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:8px}
-.stseg button{white-space:nowrap;padding:0 10px}
+.stseg{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:420px){.stseg{grid-template-columns:repeat(4,1fr)}}
+.stseg button{white-space:nowrap;padding:0 8px;font-size:14px}
+.f select{-webkit-appearance:none;appearance:none;padding-right:38px;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%236b6680' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center}
+.foot .btn.danger{margin-right:auto;white-space:normal;text-align:center;line-height:1.2;padding-top:6px;padding-bottom:6px}
+.foot .btn:not(.danger){flex:none}
 .swatches{display:flex;gap:10px;flex-wrap:wrap}
 .swatch{width:36px;height:36px;border-radius:50%;border:0;cursor:pointer;padding:0}
 .swatch[aria-pressed="true"]{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--ink)}
 .foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:4px}
-.foot .spacer{flex:1}
+.foot .spacer{display:none}
+.foot{align-items:center;flex-wrap:nowrap}
 .sheet.fit .foot{position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));background:var(--panel);padding:12px 0 0;margin-top:0;border-top:1px solid var(--line)}
 .hint{font-size:13px;color:var(--muted);margin:0}
+
+/* summary rows: label on the left, current value on the right; tap to open the editor beneath */
+.srows{border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);overflow:hidden}
+.srow+.srow{border-top:1px solid var(--line)}
+.srow-h{position:relative;display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 14px;border:0;background:none;cursor:pointer;text-align:left;font-weight:600}
+.srow-h:hover{background:color-mix(in srgb,var(--ink) 4%,transparent)}
+.srow-v{margin-left:auto;display:flex;align-items:center;gap:8px;min-width:0;color:var(--muted);font-weight:500;font-size:15px}
+.srow-v>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srow-h::after{content:"";flex:none;width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);margin-left:2px;transition:transform .15s}
+.srow.open>.srow-h::after{transform:rotate(45deg)}
+.srow-p{padding:4px 14px 16px;display:flex;flex-direction:column;gap:14px}
+.srow-p[hidden]{display:none}
+.srow select{position:absolute;inset:0;width:100%;height:100%;opacity:0;min-height:0;cursor:pointer}
 
 /* "More options" disclosure in the editors */
 .more{border-top:1px solid var(--line);padding-top:2px}
@@ -811,6 +836,7 @@ function toast(msg, action){
 /* current board */
 function curBoard(){
   if(S.boardId==='fav') return FAV_BOARD;
+  if(S.boardId==='group:board' || S.boardId==='group:folders') return {id:S.boardId, kind:'group', gk:S.boardId.slice(6), name:S.boardId==='group:folders'?'Folders':'Boards'};
   return S.boards.get(S.boardId) || FAV_BOARD;
 }
 function clearSearch(){ S.q=''; S.listView=false; S.matchIdx=-1; if(qInput) qInput.value=''; }
@@ -905,6 +931,25 @@ function makeFavPicker(initial, initialColor){
   sw.addEventListener('click',()=>{ if(set.size) set.clear(); else set.add(boards[0].id); paint(); });
   paint();
   return {el:h('div',{class:'favfield'}, row, chips, colorBox), ids:()=>boards.filter(b=>set.has(b.id)).map(b=>b.id), color:()=>color};
+}
+/* One summary row. `value()` returns the text shown on the right (or a node); `panel` (optional) opens beneath on tap;
+   `overlay` (optional) is a native control laid invisibly over the row (e.g. a <select>). Returns {el, refresh, close}. */
+function summaryRow(label, value, panel, overlay){
+  const val = h('span',{class:'srow-v'});
+  const head = h('button',{type:'button',class:'srow-h','aria-expanded':'false'}, h('span',{text:label}), val);
+  const body = panel ? h('div',{class:'srow-p',hidden:true}, panel) : null;
+  const el = h('div',{class:'srow'}, head, body);
+  if(overlay) head.append(overlay);
+  const refresh = ()=>{ const v = value(); val.replaceChildren(...[].concat(v).map(x=>typeof x==='string'?h('span',{text:x}):x)); };
+  const close = ()=>{ if(!body) return; body.hidden = true; el.classList.remove('open'); head.setAttribute('aria-expanded','false'); };
+  if(body){
+    head.addEventListener('click',()=>{ const open = body.hidden; body.hidden = !open; el.classList.toggle('open',open); head.setAttribute('aria-expanded',String(open)); });
+    body.addEventListener('click',()=>setTimeout(refresh,0));
+    body.addEventListener('input',()=>setTimeout(refresh,0));
+  }
+  if(overlay) overlay.addEventListener('change',refresh);
+  refresh();
+  return {el, refresh, close};
 }
 function field(label, input){ return h('div',{class:'f'}, h('label',{text:label}), input); }
 
@@ -1028,14 +1073,20 @@ function openCardEditor(opts){
     const statusSeg = h('div',{class:'seg stseg'});
     STATUS_ORDER.forEach(k=>{
       statusSeg.append(h('button',{type:'button','aria-pressed':String(status===k),onclick:()=>{
-        status = k; [...statusSeg.children].forEach((btn,i)=>btn.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k))); }},
+        status = k; [...statusSeg.children].forEach((btn,i)=>btn.setAttribute('aria-pressed',String(STATUS_ORDER[i]===k)));
+        if(typeof statusRow!=='undefined') setTimeout(()=>{ statusRow.refresh(); statusRow.close(); },120); }},
         h('span',{class:'sdot static','data-s':k}), STATUS[k].label));
     });
     const urlInput = h('input',{type:'url',inputmode:'url',autocapitalize:'off',maxlength:'1000',placeholder:''}); urlInput.value = draft.url||'';
     const favPicker = makeFavPicker(favIds(draft), draft.favColor);
     const tagPicker = makeTagPicker(draft.tags||[]);
-    const more = h('details',{class:'more'}, h('summary',{text:'More options'}), h('div',{class:'more-body'}, favPicker.el, field('Tags', tagPicker.el)));
-    if(existing && (favIds(existing).length || (existing.tags||[]).length)) more.open = true;
+    const statusRow = summaryRow('Status', ()=>[h('span',{class:'sdot static','data-s':status}), STATUS[status].label], statusSeg);
+    const sectionRow = summaryRow('Section', ()=>(sections.find(x=>x.id===sectionSelect.value)||{}).name||'Untitled', null, sectionSelect);
+    const tagsRow = summaryRow('Tags', ()=>{ const t = tagPicker.value(); return t.length ? t.join(', ') : 'None'; }, tagPicker.el);
+    const favRow = summaryRow('Favourite', ()=>{
+      const ids = favPicker.ids(), names = Model.favBoardList().filter(b=>ids.includes(b.id)).map(b=>b.name||'Fav');
+      return names.length ? names.join(', ') : 'Off'; }, favPicker.el);
+    const rows = h('div',{class:'srows'}, statusRow.el, sectionRow.el, tagsRow.el, favRow.el);
 
     const deleteBtn = existing ? armedDeleteButton('Delete','Tap again to delete',()=>Model.deleteCard(existing.id)) : null;
 
@@ -1051,7 +1102,7 @@ function openCardEditor(opts){
     });
     sheet.append(
       h('h3',{text:existing?'Edit card':'New card'}),
-      field('Card text', titleInput), field('Link', urlInput), field('Note', bodyInput), field('Status', statusSeg), field('Section', sectionSelect), more,
+      field('Card text', titleInput), field('Link', urlInput), field('Note', bodyInput), rows,
       sheetFooter('Save', save, deleteBtn));
     wireSheetInputs(sheet, save, {lines:[titleInput], multiline:[bodyInput]});
     if(!existing) setTimeout(()=>titleInput.focus(),30);
@@ -1273,6 +1324,7 @@ function render(){
   const listMode = searching && S.listView;
   const isFolders = !!b && b.kind==='folders';
   const isFav = isFavKind(b);
+  const isGroup = !!b && b.kind==='group';
   const groups = searching && ready() ? searchAll() : null;
   const cardTags = cardTagList(), boardTags = boardTagList();
   if(S.tag && !cardTags.some(t=>t.key===S.tag)) S.tag = null;             // that tag no longer exists anywhere
@@ -1283,11 +1335,12 @@ function render(){
   const focusKey = focusKeyOf(document.activeElement);   // keyboard focus survives the rebuild below
   S.resetScroll = false;
   renderChrome(b, groups);
-  board.hidden = listMode || isFolders || isFav;
+  board.hidden = listMode || isFolders || isFav || isGroup;
   foldersEl.hidden = listMode || !isFolders;
-  favsEl.hidden = listMode || !isFav;
+  favsEl.hidden = listMode || !(isFav || isGroup);
   resultsEl.hidden = !listMode;
   if(listMode) renderResults(groups);
+  else if(isGroup) renderGroup(b);
   else if(isFav) renderFavs(b);
   else if(isFolders) renderFolders(b);
   else renderBoard(b);
@@ -1356,9 +1409,11 @@ let lastTabsSignature = '';
 function renderChrome(b, groups){
   const isFolders = !!b && b.kind==='folders';
   const isFav = isFavKind(b);
+  const isGroup = !!b && b.kind==='group';
   let stats = '';
   if(ready() && b){
-    if(isFav){ const n = Model.favCards(b.id).length + Model.favBoards(b.id).length; stats = n+(n===1?' favourite':' favourites'); }
+    if(isGroup){ const n = [...S.boards.values()].filter(x=>b.gk==='folders' ? x.kind==='folders' : (x.kind!=='favs' && x.kind!=='folders')).length; stats = n+(n===1?' board':' boards'); }
+    else if(isFav){ const n = Model.favCards(b.id).length + Model.favBoards(b.id).length; stats = n+(n===1?' favourite':' favourites'); }
     else if(isFolders) stats = Model.foldersOf(b.id).length+' folders · '+Model.contentsOf(b.id).length+' items';
     else { const ss = Model.sectionsOf(b.id); stats = ss.length+' sections · '+ss.reduce((n,s)=>n+Model.cardsIn(s.id).length,0)+' cards'; }
   }
@@ -1374,25 +1429,37 @@ function renderChrome(b, groups){
     const boardTagged = !!S.boardTag && (fav ? Model.favBoards(x.id).some(bd=>hasTag(bd,S.boardTag)) : hasTag(x,S.boardTag));
     return {id:x.id, name:x.name||(fav?'Fav':'Untitled'), kind:x.kind, fav, active, badge, boardTagged};
   }).filter(t=> (!S.boardTag || t.boardTagged) && (groups ? t.badge>0 : (tagCountsNow ? t.badge>0 : true)));   // searching or filtering: only boards with results are shown
-  const signature = JSON.stringify([!!groups, !!tagCountsNow, !!S.boardTag, tabSpecs]);
+  const flat = !!(groups || tagCountsNow || S.boardTag);
+  // normal view: Fav boards always shown, then one pill per board kind (tap = page with all of them, A–Z)
+  const pillSpecs = flat ? [] : [
+    ...tabSpecs.filter(t=>t.fav),
+    ...[['board','Boards'],['folders','Folders']].map(([gk,label])=>{
+      const members = [...S.boards.values()].filter(x=>gk==='folders' ? x.kind==='folders' : (x.kind!=='favs' && x.kind!=='folders'));
+      const active = !!b && (b.id==='group:'+gk || (b.kind!=='group' && b.kind!=='favs' && b.kind!=='favourites' && (gk==='folders') === (b.kind==='folders')));
+      const here = active && b.kind!=='group' ? b.name||'Untitled' : '';
+      return {id:'group:'+gk, name:here ? label+' › '+here : label, kind:gk, fav:false, active, badge:0, count:members.length, editId:here?b.id:null};
+    }).filter(t=>t.count>0 || t.active)
+  ];
+  const signature = JSON.stringify([!!groups, !!tagCountsNow, !!S.boardTag, flat?tabSpecs:pillSpecs]);
   if(signature!==lastTabsSignature){
     lastTabsSignature = signature;
     const tabEl = t=>{
       const badgeEl = t.badge ? h('span',{class:'n',title:t.badge+' '+(groups?'matches':(t.fav?'with this tag':'cards with this tag')),text:String(t.badge)}) : null;
       const icon = t.fav ? ic(t.active?'starFill':'star',14) : ic(t.kind==='folders'?'folder':'board',14);
-      const editable = t.active && t.id!==FAV_ID;
+      const editable = t.active && t.id!==FAV_ID && !String(t.id).startsWith('group:');
+      const editId = editable ? t.id : t.editId;
       return h('div',{class:'tab'+(t.fav?' fav':'')+(t.active?' on':'')},
         h('button',{class:'tab-main','data-fk':'tab:'+t.id,'aria-current':t.active?'page':null,onclick:()=>selectBoard(t.id)}, icon, t.name, badgeEl),
-        editable ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:t.id})}, ic('edit',13)) : null);
+        editId ? h('button',{class:'icon-btn','aria-label':'Edit board',title:'Edit board',onclick:()=>openBoardEditor({id:editId})}, ic('edit',13)) : null);
     };
     const tabs = $('#tabs');
     const addTab = (groups || tagCountsNow || S.boardTag) ? null : h('div',{class:'tab add'}, h('button',{class:'tab-main',onclick:()=>{ if(!S.store) return toast('Still loading…'); openBoardEditor({}); }}, ic('plus',14),'Board'));
-    tabs.replaceChildren(...tabSpecs.map(tabEl), ...(addTab ? [addTab] : []));
+    tabs.replaceChildren(...(flat?tabSpecs:pillSpecs).map(tabEl), ...(addTab ? [addTab] : []));
   }
   const hasBoard = !!b;
-  $('#btnSection').hidden = !hasBoard || isFolders || isFav;
-  $('#btnCard').hidden = !hasBoard || isFolders || isFav;
-  $('#btnFolder').hidden = !hasBoard || !isFolders;
+  $('#btnSection').hidden = !hasBoard || isFolders || isFav || isGroup;
+  $('#btnCard').hidden = !hasBoard || isFolders || isFav || isGroup;
+  $('#btnFolder').hidden = !hasBoard || !isFolders || isGroup;
 }
 
 /* ---------- tag filter (one tag at a time; tap again to clear) ---------- */
@@ -1537,6 +1604,30 @@ function renderFavs(b){
   }
 }
 
+/* ---------- board group page: every board of one kind, A–Z ---------- */
+function renderGroup(b){
+  favsEl.replaceChildren();
+  const wrap = h('div',{class:'favwrap'});
+  favsEl.append(wrap);
+  if(!ready()){ wrap.append(loadErrorNode('fempty') || h('div',{class:'fempty',text:'Loading…'})); return; }
+  const isF = b.gk==='folders';
+  const boards = [...S.boards.values()].filter(x=>isF ? x.kind==='folders' : (x.kind!=='favs' && x.kind!=='folders')).sort(byName);
+  if(!boards.length){ wrap.append(h('div',{class:'fempty'}, h('p',{text:'No '+(isF?'folder boards':'boards')+' yet.'}))); return; }
+  const colors = favColorMap(boards);
+  const grid = h('div',{class:'bgrid'});
+  boards.forEach(bd=>{
+    const n = isF ? Model.foldersOf(bd.id).length : Model.sectionsOf(bd.id).length;
+    const sub = n+(isF?(n===1?' folder':' folders'):(n===1?' section':' sections'));
+    const title = bd.name||'Untitled';
+    grid.append(h('div',{class:'bpill',style:'--tc:var(--'+(colors.get(bd.id)||'c0')+')'},
+      h('button',{class:'bpill-main',type:'button','aria-label':'Open board '+title,onclick:()=>selectBoard(bd.id)},
+        h('span',{class:'bpill-dot',text:(Array.from(title.trim())[0]||'?').toUpperCase()}),
+        h('span',{class:'bpill-name',text:title}), h('span',{class:'bpill-sub',text:sub})),
+      h('button',{class:'icon-btn','aria-label':'Edit '+title,title:'Edit',onclick:()=>openBoardEditor({id:bd.id})}, ic('edit',15))));
+  });
+  wrap.append(grid);
+}
+
 function cycleStatus(c){
   const cur = cardStatus(c), next = STATUS_ORDER[(STATUS_ORDER.indexOf(cur)+1)%STATUS_ORDER.length];
   if(next==='closed') toast('Moved under “Closed”.',{label:'Undo',run:()=>Model.updateCard(c.id,{status:cur})});
@@ -1552,8 +1643,7 @@ function cardEl(c, sec){
       onkeydown:onActivateKey(()=>openCardEditor({id:c.id}))},
     h('div',{class:'c-main'},
       h('div',{class:'c-top'},
-        h('button',{class:'sdot',type:'button','data-s':st,'data-fk':'st:'+c.id,title:STATUS[st].label+' — tap to change','aria-label':'Status: '+STATUS[st].label+'. Tap to change.',
-          onclick:e=>{ e.stopPropagation(); cycleStatus(c); }}),
+        h('span',{class:'sdot static','data-s':st,role:'img',title:STATUS[st].label,'aria-label':'Status: '+STATUS[st].label}),
         h('div',{class:'c-title'}, highlightIfSearching(c.title||'(untitled)')),
         c.fav===true ? h('span',{class:'c-fav',title:'On Favourites','aria-label':'On Favourites'}, ic('starFill',13)) : null,
         hasNote ? h('span',{class:'c-note',title:'Has a note — open the card to read it','aria-label':'Has a note'}, ic('note',14)) : null,
